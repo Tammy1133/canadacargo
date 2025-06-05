@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div style="font-family: Arial, sans-serif; color: #333">
+      <div style="text-align: center">
+        <img
+          src="cid:logo"
+          alt="Canada Cargo"
+          style="height: 50px; margin-bottom: 10px"
+        />
+        <h2 style="color: #004085">Shipment Processed Successfully</h2>
+      </div>
+
+      <p>Dear ${shipmentInfo.shipper_name},</p>
+
+      <p>
+        We are pleased to inform you that your shipment with transaction ID
+        <strong>${trans_id}</strong> has been successfully processed.
+      </p>
+
+      <p><strong>Your invoice has been attached to this email.</strong></p>
+
+      <h3 style="color: #004085">Shipment Details</h3>
+      <table style="border-collapse: collapse; width: 100%; font-size: 14px">
+        <tbody>
+          <tr style="background-color: #f8f9fa">
+            <td style="padding: 8px; border: 1px solid #dee2e6">
+              Shipper Name
+            </td>
+            <td style="padding: 8px; border: 1px solid #dee2e6">
+              ${shipmentInfo.shipper_name}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border: 1px solid #dee2e6">
+              Shipper Phone
+            </td>
+            <td style="padding: 8px; border: 1px solid #dee2e6">
+              ${shipmentInfo.shipper_phone}
+            </td>
+          </tr>
+          <tr style="background-color: #f8f9fa">
+            <td style="padding: 8px; border: 1px solid #dee2e6">
+              Shipper Address
+            </td>
+            <td style="padding: 8px; border: 1px solid #dee2e6">
+              ${shipmentInfo.shipper_address}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border: 1px solid #dee2e6">
+              Shipper Email
+            </td>
+            <td style="padding: 8px; border: 1px solid #dee2e6">
+              ${shipmentInfo.shipper_email}
+            </td>
+          </tr>
+          <tr style="background-color: #f8f9fa">
+            <td style="padding: 8px; border: 1px solid #dee2e6">
+              Receiver Name
+            </td>
+            <td style="padding: 8px; border: 1px solid #dee2e6">
+              ${shipmentInfo.receiver_name}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border: 1px solid #dee2e6">
+              Receiver Phone
+            </td>
+            <td style="padding: 8px; border: 1px solid #dee2e6">
+              ${shipmentInfo.receiver_phone}
+            </td>
+          </tr>
+          <tr style="background-color: #f8f9fa">
+            <td style="padding: 8px; border: 1px solid #dee2e6">
+              Receiver Address
+            </td>
+            <td style="padding: 8px; border: 1px solid #dee2e6">
+              ${shipmentInfo.receiver_address}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border: 1px solid #dee2e6">
+              Receiver Email
+            </td>
+            <td style="padding: 8px; border: 1px solid #dee2e6">
+              ${shipmentInfo.receiver_email}
+            </td>
+          </tr>
+          <tr style="background-color: #f8f9fa">
+            <td style="padding: 8px; border: 1px solid #dee2e6">
+              Shipment Type
+            </td>
+            <td style="padding: 8px; border: 1px solid #dee2e6">
+              ${shipmentInfo.shipment_type}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border: 1px solid #dee2e6">Box Number</td>
+            <td style="padding: 8px; border: 1px solid #dee2e6">
+              ${shipmentInfo.box_number}
+            </td>
+          </tr>
+          <tr style="background-color: #f8f9fa">
+            <td style="padding: 8px; border: 1px solid #dee2e6">Courier</td>
+            <td style="padding: 8px; border: 1px solid #dee2e6">
+              ${shipmentInfo.courier}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border: 1px solid #dee2e6">
+              Payment Mode
+            </td>
+            <td style="padding: 8px; border: 1px solid #dee2e6">
+              ${shipmentInfo.payment_mode}
+            </td>
+          </tr>
+          <tr style="background-color: #f8f9fa">
+            <td style="padding: 8px; border: 1px solid #dee2e6">Origin</td>
+            <td style="padding: 8px; border: 1px solid #dee2e6">
+              ${shipmentInfo.origin}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border: 1px solid #dee2e6">Destination</td>
+            <td style="padding: 8px; border: 1px solid #dee2e6">
+              ${shipmentInfo.destination}
+            </td>
+          </tr>
+          <tr style="background-color: #f8f9fa">
+            <td style="padding: 8px; border: 1px solid #dee2e6">Pickup Date</td>
+            <td style="padding: 8px; border: 1px solid #dee2e6">
+              ${shipmentInfo.pickup_date}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border: 1px solid #dee2e6">
+              Expected Delivery Date
+            </td>
+            <td style="padding: 8px; border: 1px solid #dee2e6">
+              ${shipmentInfo.expected_date_delivery}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p style="margin-top: 20px">
+        Thank you for choosing <strong>Canada Cargo</strong>.
+      </p>
+
+      <p style="font-size: 13px; color: #6c757d">
+        This is an automated message. Please do not reply to this email.
+      </p>
+    </div>
+  </body>
+</html>

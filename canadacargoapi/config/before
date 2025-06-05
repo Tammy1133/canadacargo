@@ -1,0 +1,37 @@
+{
+  "development": {
+    "username": "u6yujcqtgicjh7wj",
+    "password": "XkBUfhifAQqt9pR9Vy7W",
+    "database": "bg6t0qgsstmhqkjzrx1z",
+    "host": "bg6t0qgsstmhqkjzrx1z-mysql.services.clever-cloud.com",
+    "dialect": "mysql",
+    "port": 3306
+  },
+
+  
+  "development4": {
+    "username": "root",
+    "password": "",
+    "database": "canadacargo",
+    "dialect": "mysql", 
+    "dialectOptions": {
+      "options": {
+        "requestTimeout": 30000,
+        "trustServerCertificate":true
+      }
+    }, 
+    "port":3306
+  },
+  "test":{
+    "username": "sa",
+    "password": "Lambvard01###",
+    "database": "clinicmanagement",
+    "dialect": "mssql"
+  },
+  "production": {
+    "username": "sa",
+    "password": "Lambvard01###",
+    "database": "clinicmanagement",
+    "dialect": "mssql"
+  }
+}
