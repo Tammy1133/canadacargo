@@ -269,6 +269,7 @@ function PendingPayments() {
           <th style="border: 1px solid #ddd; padding: 8px;">Shipping Rate</th>
           <th style="border: 1px solid #ddd; padding: 8px;">Piece Price</th>
           <th style="border: 1px solid #ddd; padding: 8px;">Pickup Fee</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Extra Fee</th>
           <th style="border: 1px solid #ddd; padding: 8px;">Total</th>
         </tr>
       </thead>
@@ -291,7 +292,14 @@ function PendingPayments() {
               pickup_fee
             )?.toLocaleString()}</td>
             <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
-              calculations?.totalSum + Number(pickup_fee)
+              shipment?.total_extra_fees || 0
+            )?.toLocaleString()}</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
+              calculations?.totalSum +
+                Number(pickup_fee) +
+                (shipment?.total_extra_fees
+                  ? Number(shipment?.total_extra_fees || 0)
+                  : 0)
             )?.toLocaleString()}</td>
           </tr>`
           )
@@ -321,7 +329,8 @@ function PendingPayments() {
           0,
           0,
           pickup_fee,
-          calculations?.totalWeight
+          calculations?.totalWeight,
+          shipment?.total_extra_fees
         );
       }
     });
@@ -373,7 +382,6 @@ function PendingPayments() {
           },
         }
       );
-
       setTrans(response.data.data);
 
       setsendloading(false);
@@ -444,9 +452,12 @@ function PendingPayments() {
     custom_fee,
     doorstep_fee,
     pickup_fee,
-    total_weight
+    total_weight,
+    total_extra_fees
   ) => {
     try {
+      let extra_fees = Number(total_extra_fees) || 0;
+
       const getcounter = await axios.get(
         `${import.meta.env.VITE_API_URL}/getMostRecentCounter`,
         {
@@ -602,7 +613,7 @@ function PendingPayments() {
                   Shipping Rate
                 </Text>
                 <Text style={[styles.tableCell, styles.bold]}>Carton</Text>
-                <Text style={[styles.tableCell, styles.bold]}>Custom Fee</Text>
+                <Text style={[styles.tableCell, styles.bold]}>Extra Fees</Text>
                 <Text style={[styles.tableCell, styles.bold]}>
                   Doorstep Fee
                 </Text>
@@ -618,7 +629,7 @@ function PendingPayments() {
                   N {Number(carton)?.toLocaleString()}
                 </Text>
                 <Text style={styles.tableCell}>
-                  N {Number(custom_fee)?.toLocaleString()}
+                  N {Number(extra_fees)?.toLocaleString()}
                 </Text>
                 <Text style={styles.tableCell}>
                   N {Number(doorstep_fee)?.toLocaleString()}
@@ -628,7 +639,11 @@ function PendingPayments() {
                 </Text>
                 <Text style={styles.tableCell}>
                   N
-                  {(Number(amount) + Number(pickup_fee || 0))?.toLocaleString()}
+                  {(
+                    Number(amount) +
+                    Number(pickup_fee || 0) +
+                    extra_fees
+                  )?.toLocaleString()}
                 </Text>
               </View>
             </View>
@@ -858,7 +873,13 @@ function PendingPayments() {
     getPieceTypes();
   }, []);
 
-  function calculateShipping(items, currentRate, pieceTypes, pickup_price) {
+  function calculateShipping(
+    items,
+    currentRate,
+    pieceTypes,
+    pickup_price,
+    extra_fees
+  ) {
     // console.log(pickup_price);
 
     if (items && items.length > 0) {
@@ -877,7 +898,10 @@ function PendingPayments() {
       }, 0);
 
       const totalSum =
-        shippingRate + itemFee + (pickup_price ? Number(pickup_price) : 0);
+        shippingRate +
+        itemFee +
+        (pickup_price ? Number(pickup_price) : 0) +
+        (extra_fees ? Number(extra_fees) : 0);
 
       return {
         totalWeight,
@@ -976,7 +1000,8 @@ function PendingPayments() {
                             l.items,
                             l.product_type_price,
                             pieceTypes,
-                            l.pickup_price
+                            l.pickup_price,
+                            l.total_extra_fees
                           )?.totalSum
                         )?.toLocaleString()}
                       </td>

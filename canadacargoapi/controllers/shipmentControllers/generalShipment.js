@@ -334,7 +334,6 @@ const getPendingWeighments = async (req, res) => {
       si.receiver_address,
       si.receiver_email,
       si.shipment_type,
-      si.box_number,
       si.courier,
       si.payment_mode,
       si.origin,
@@ -343,6 +342,8 @@ const getPendingWeighments = async (req, res) => {
       si.expected_date_delivery,
       si.comments,
       si.province,
+      si.extra_fees,
+      si.feequantities,
       si.created_date
     FROM 
       pending_weighment pw
@@ -379,7 +380,8 @@ const getPendingWeighments = async (req, res) => {
         type,
         weight,
         status,
-        item_trans_id
+        item_trans_id, 
+        box_number
       FROM 
         shipment_items
       WHERE 
@@ -391,7 +393,6 @@ const getPendingWeighments = async (req, res) => {
       replacements: { transIds },
     });
 
-    // Map items to their corresponding transaction IDs
     const itemsMap = shipmentItems.reduce((acc, item) => {
       if (!acc[item.trans_id]) {
         acc[item.trans_id] = [];
@@ -402,6 +403,7 @@ const getPendingWeighments = async (req, res) => {
         weight: item.weight,
         status: item.status,
         item_trans_id: item.item_trans_id,
+        box_number: item?.box_number
       });
       return acc;
     }, {});
@@ -426,21 +428,21 @@ const getPendingWeighments = async (req, res) => {
 };
 
 const updateItems = async (req, res) => {
-  const { trans_id, items } = req.body;
+  const { trans_id, items, extra_fees, total_extra_fees, feequantities } = req.body;
 
-  // Validate required fields
+  
+
   if (!trans_id || trans_id.trim() === "") {
     return res.status(400).json({ message: "Transaction ID is required" });
   }
+
   if (!items || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ message: "Items must be a non-empty array" });
   }
 
   try {
-    // Begin transaction
     const transaction = await sequelize.transaction();
     try {
-      // Delete existing items for the given trans_id
       await sequelize.query(
         `DELETE FROM shipment_items WHERE trans_id = :trans_id`,
         {
@@ -449,23 +451,20 @@ const updateItems = async (req, res) => {
         }
       );
 
-      // Insert new items
-      console.log(items);
-      
       const insertPromises = items.map((item) => {
-        const { name, type, weight, box_number } = item; // Ensure each item has these properties
+        const { name, type, weight, box_number } = item;
         if (!name || !type || !weight || !box_number) {
           throw new Error("Each item must have a name, type, box number and weight");
         }
 
         const item_trans_id =
-          trans_id +
-          "_" +
-          Math.random().toString(36).substr(2, 4).toUpperCase();
+          trans_id + "_" + Math.random().toString(36).substr(2, 4).toUpperCase();
 
         return sequelize.query(
-          `INSERT INTO shipment_items (trans_id, name, type, weight, status, item_trans_id, box_number) 
-           VALUES (:trans_id, :name, :type, :weight, :status, :item_trans_id, :box_number)`,
+          `INSERT INTO shipment_items 
+            (trans_id, name, type, weight, status, item_trans_id, box_number) 
+           VALUES 
+            (:trans_id, :name, :type, :weight, :status, :item_trans_id, :box_number)`,
           {
             replacements: {
               trans_id,
@@ -474,7 +473,7 @@ const updateItems = async (req, res) => {
               weight,
               status: "Pending",
               item_trans_id,
-              box_number
+              box_number,
             },
             transaction,
           }
@@ -483,29 +482,43 @@ const updateItems = async (req, res) => {
 
       await Promise.all(insertPromises);
 
+      await sequelize.query(
+        `UPDATE shipment_info 
+         SET extra_fees = :extra_fees, total_extra_fees = :total_extra_fees , feequantities = :feequantities
+         WHERE trans_id = :trans_id`,
+        {
+          replacements: {
+            trans_id,
+            extra_fees: JSON.stringify(extra_fees || []),
+            total_extra_fees: total_extra_fees || 0,
+            feequantities:JSON.stringify(feequantities || {})
+          },
+          transaction,
+        }
+      );
+
       await transaction.commit();
 
       res.status(200).json({
-        message: "Items updated successfully",
+        message: "Items and extra fees updated successfully",
         trans_id,
         items: items.map((item) => ({
           ...item,
           status: "Pending",
           item_trans_id:
-            trans_id +
-            "_" +
-            Math.random().toString(36).substr(2, 4).toUpperCase(),
+            trans_id + "_" + Math.random().toString(36).substr(2, 4).toUpperCase(),
         })),
+        extra_fees,
+        total_extra_fees,
       });
     } catch (err) {
-      // Rollback transaction on error
       await transaction.rollback();
       throw err;
     }
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      message: "Failed to update items",
+      message: "Failed to update items and fees",
       error: error.message,
     });
   }
@@ -629,7 +642,8 @@ const getPendingPayment = async (req, res) => {
       si.pickup_price,
       si.product_type_price,
       si.product_type,
-      si.prepared_by
+      si.prepared_by,
+      si.total_extra_fees
     FROM 
       pending_payment pw
     JOIN 
@@ -1158,7 +1172,8 @@ const getCompletedPayments = async (req, res) => {
         si.created_date,
         si.product_type_price,
         si.product_type,
-        si.prepared_by
+        si.prepared_by,
+        si.total_extra_fees
       FROM 
         completed_payments cp
       JOIN 
@@ -1185,10 +1200,8 @@ const getCompletedPayments = async (req, res) => {
       });
     }
 
-    // Process each result to fetch items from shipment_items table
     const processedResults = await Promise.all(
       results.map(async (result) => {
-        // Fetch items related to the current trans_id from shipment_items table
         const items = await sequelize.query(
           `
           SELECT 
@@ -2985,18 +2998,15 @@ const getOutOfOffice = async (req, res) => {
       }
     );
 
-    // If no out_of_office items are found, return a 404 response
     if (outOfOfficeItems.length === 0) {
       return res.status(404).json({
         message: "No out of office items found.",
       });
     }
 
-    // Fetch shipment_info and group items by trans_id
     const transIdMap = {};
 
     for (const item of outOfOfficeItems) {
-      // Fetch shipment_info for the current item_trans_id
       const shipmentInfo = await sequelize.query(
         `
         SELECT 
@@ -3022,7 +3032,7 @@ const getOutOfOffice = async (req, res) => {
           created_date,
           province
         FROM shipment_info 
-        WHERE 
+        WHERE
           trans_id = (
             SELECT trans_id 
             FROM shipment_items 
@@ -3051,7 +3061,7 @@ const getOutOfOffice = async (req, res) => {
       if (!transIdMap[transId]) {
         // Fetch all shipment_items for the current trans_id
         const items = await sequelize.query(
-          `SELECT trans_id, name, type, weight, status, item_trans_id 
+          `SELECT trans_id, name, type, weight, status, item_trans_id, box_number 
            FROM shipment_items 
            WHERE trans_id = :trans_id`,
           {
@@ -3060,20 +3070,17 @@ const getOutOfOffice = async (req, res) => {
           }
         );
 
-        // Create a new entry for this trans_id
         transIdMap[transId] = {
           trans_id: transId,
-          created_at: item.created_at, // Using created_at instead of date_created
-          shipment_info: shipmentInfo[0], // Assuming one shipment_info per trans_id
+          created_at: item.created_at, 
+          shipment_info: shipmentInfo[0],
           items: items,
         };
       }
     }
 
-    // Convert the map to an array
     const processedResults = Object.values(transIdMap);
 
-    // Return the successfully processed results
     res.status(200).json({
       message: "Shipment items retrieved successfully.",
       data: processedResults,
@@ -3336,23 +3343,26 @@ const getDashboardData = async (req, res) => {
       sequelize.query(
         `SELECT oo.* 
          FROM out_of_office oo
-         INNER JOIN shipment_info si ON oo.trans_id = si.trans_id
+         INNER JOIN shipment_info si 
+           ON oo.item_trans_id LIKE CONCAT(si.trans_id, '_%')
          WHERE si.location = :location`,
         {
           replacements: { location: userLocation },
           type: sequelize.QueryTypes.SELECT,
         }
-      ),
+      ),      
       sequelize.query(
         `SELECT it.* 
          FROM items_intransit it
-         INNER JOIN shipment_info si ON it.trans_id = si.trans_id
+         INNER JOIN shipment_info si 
+           ON it.item_trans_id LIKE CONCAT(si.trans_id, '_%')
          WHERE si.location = :location`,
         {
           replacements: { location: userLocation },
           type: sequelize.QueryTypes.SELECT,
         }
       ),
+      
       sequelize.query(
         `SELECT si.trans_id, si.name, si.type, si.weight, si.status, si.item_trans_id, si.tracking_number 
          FROM shipment_items si

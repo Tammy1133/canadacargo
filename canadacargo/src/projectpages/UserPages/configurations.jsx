@@ -12,6 +12,7 @@ import { ClearingFee } from "../UserComponents/configurations/clearingFee";
 import { ClearingFeeTax } from "../UserComponents/configurations/clearingFeeTax";
 import { LocationDelivery } from "../UserComponents/configurations/locationDelivery";
 import { ProductType } from "../UserComponents/configurations/producttype";
+import { ExtraFees } from "../UserComponents/configurations/extrafees";
 
 export const Configurations = () => {
   const CONFIGURATION_TYPES = [
@@ -22,6 +23,7 @@ export const Configurations = () => {
     "ORIGIN",
     "DESTINATION",
     "PIECE TYPES",
+    "EXTRA FEES",
     "LOCATION DELIVERY",
     // "SHIPPING COST PER KG",
     // "TAX CONFIGURATION",
@@ -80,6 +82,7 @@ export const Configurations = () => {
         {selectedType === "PAYMENT MODES" && <PaymentModes></PaymentModes>}
         {selectedType === "COURIER" && <Courier></Courier>}
         {selectedType === "SHIPMENT TYPE" && <ShipmentType></ShipmentType>}
+        {selectedType === "EXTRA FEES" && <ExtraFees></ExtraFees>}
         {selectedType === "PRODUCT TYPE" && <ProductType></ProductType>}
         {selectedType === "CLEARING FEE TAX" && (
           <ClearingFeeTax></ClearingFeeTax>

@@ -641,6 +641,16 @@ function MarkInTransit() {
                           className="border rounded p-1 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none"
                         />
                       </label>
+                      <label className="block mb-1">
+                        Box Number:
+                        <input
+                          type="number"
+                          disabled
+                          value={item.box_number}
+                          readOnly
+                          className="border rounded p-1 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        />
+                      </label>
 
                       <label className="block mb-6 mt-5">
                         Enter Tracking number for {item.name}:

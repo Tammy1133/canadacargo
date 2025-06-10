@@ -11,6 +11,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { getUserDetails } from "../../projectcomponents/auth";
 import axios from "axios";
+import Select from "react-select";
 
 function PendingWeighments() {
   const [trans, setTrans] = useState([]);
@@ -122,8 +123,55 @@ function PendingWeighments() {
   const [selectedId, setSelectedId] = useState(null);
   const [searchText, setSearchText] = useState("");
 
+  const [selectedFees, setSelectedFees] = useState([]);
+  const [feeQuantities, setFeeQuantities] = useState({});
+  function safeParseArray(value) {
+    if (!value) return [];
+
+    try {
+      if (Array.isArray(value)) {
+        return value;
+      }
+
+      const parsed = JSON.parse(value);
+
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function safeParseObject(value) {
+    if (!value) return {};
+
+    console.log(typeof value);
+
+    try {
+      if (
+        typeof value === "object" &&
+        value !== null &&
+        !Array.isArray(value)
+      ) {
+        return value;
+      }
+
+      const parsed = JSON.parse(value);
+
+      return typeof parsed === "object" &&
+        parsed !== null &&
+        !Array.isArray(parsed)
+        ? parsed
+        : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
   const viewWeighmentInfo = (data) => {
     setIsModalOpen(true);
+
+    setSelectedFees(safeParseArray(data?.extra_fees));
+    setFeeQuantities(safeParseObject(data?.feequantities));
 
     setDisplayingShipperInfo(data);
   };
@@ -193,7 +241,8 @@ function PendingWeighments() {
   };
 
   const handleProcessClick = async (shipment) => {
-    // Check if there are weighments and each weighment has a name and weight
+    let shipmentfees = safeParseArray(shipment?.extra_fees);
+    let shipmentfeequantities = safeParseObject(shipment?.feequantities);
 
     if (
       shipment.items.length > 0 &&
@@ -221,10 +270,57 @@ function PendingWeighments() {
           </tbody>
         </table>
       `; // Create a table of items
+      const extraFeeList = `
+      <h4>Extra Fee </h4>
+      ${
+        shipment?.extra_fees
+          ? `<table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-top:10px">
+            <thead>
+              <tr>
+                <th style="border: 1px solid #ddd; padding: 8px;">Name</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">
+                  Price
+                </th>
+                <th style="border: 1px solid #ddd; padding: 8px;">
+                  Qty
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              
+            ${safeParseArray(shipment?.extra_fees)
+              .map(
+                (item) =>
+                  `<tr>
+                  <td style="border: 1px solid #ddd; padding: 8px;">
+                    ${item?.value}
+                  </td>
+                  <td style="border: 1px solid #ddd; padding: 8px;">
+                    ₦ ${Number(item?.price)?.toLocaleString()}
+                  </td>
+                  <td style="border: 1px solid #ddd; padding: 8px;">
+                    ${shipmentfeequantities[item?.value] || 1}
+                  </td>
+                </tr>`
+              )
+              .join("")}
+            </tbody>
+          </table>
+          <br>
+          <h3> Total Extra Fee: ₦ ${shipmentfees
+            .reduce((total, fee) => {
+              const qty = shipmentfeequantities[fee.value] || 1;
+              return total + qty * fee.price;
+            }, 0)
+            .toFixed(2)} </h3>`
+          : `<h6>No Extra Fee Added </h6>`
+      }
+       
+      `; // Create a table of items
 
       Swal.fire({
         title: "Confirm",
-        html: `Have you confirmed all cartons have been weighed?<br>${itemsList}`,
+        html: `Have you confirmed all cartons have been weighed?<br>${itemsList} <br> ${extraFeeList}`,
         icon: "warning",
         showCancelButton: true,
         confirmButtonText: loading ? "Processing..." : "Yes, proceed!", // Initial button text based on loading state
@@ -257,6 +353,14 @@ function PendingWeighments() {
   const [sendloading, setsendloading] = useState(false);
 
   const [pieceTypes, setPieceTypes] = useState([]);
+  const [extraFees, setExtraFees] = useState([]);
+
+  const feeOptions = extraFees.map((fee) => ({
+    label: `${fee.name} (₦ ${fee.price})`,
+    value: fee.name,
+    price: parseFloat(fee.price),
+    quantity: 1,
+  }));
 
   const getPendingWeighments = async (date) => {
     try {
@@ -276,12 +380,37 @@ function PendingWeighments() {
       setOriginalTrans(response.data.data);
       setTrans(response.data.data);
       setsendloading(false);
+
+      getAllExtraFees();
     } catch (error) {
       setTrans([]);
 
       setsendloading(false);
       console.error(
         "Error fetching destination:",
+        error.response?.data || error.message
+      );
+    }
+  };
+
+  const getAllExtraFees = async () => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/getAllExtraFees`,
+        {
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      // console.log(response.data.pieceTypes);
+
+      setExtraFees(response.data.pieceTypes);
+    } catch (error) {
+      console.error(
+        "Error fetching type:",
         error.response?.data || error.message
       );
     }
@@ -308,10 +437,20 @@ function PendingWeighments() {
 
       setLoading(true);
 
-      // Sending a POST request to update items
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/updateItems`,
-        { trans_id, items },
+        {
+          trans_id,
+          items,
+          extra_fees: selectedFees,
+          total_extra_fees: selectedFees
+            .reduce((total, fee) => {
+              const qty = feeQuantities[fee.value] || 1;
+              return total + qty * fee.price;
+            }, 0)
+            .toFixed(2),
+          feequantities: feeQuantities,
+        },
         {
           headers: {
             Authorization: `Bearer ${userToken}`,
@@ -320,18 +459,22 @@ function PendingWeighments() {
         }
       );
 
-      // Check if response is successful, then update state
       if (response.status === 200) {
-        // Update the transaction items in the state
         const updatedTrans = trans.map((eachitem) => {
           if (eachitem.trans_id === trans_id) {
-            return { ...eachitem, items: items, type: pieceTypes[0]?.name }; // Update items for matching trans_id
+            return {
+              ...eachitem,
+              items: items,
+              type: pieceTypes[0]?.name,
+              extra_fees: selectedFees,
+              feequantities: feeQuantities,
+            };
           }
           return eachitem;
         });
-
-        // Set the updated transactions in state
         setTrans(updatedTrans);
+        setSelectedFees([]);
+        setFeeQuantities({});
 
         // Show SweetAlert if the items were updated
         Swal.fire({
@@ -723,6 +866,82 @@ function PendingWeighments() {
                     </div>
                   </div>
                 ))}
+
+                {displayingShipperInfo.items?.length > 0 && (
+                  <div className="my-6">
+                    <h3 className="text-md font-semibold mb-2">
+                      Select Extra Fees
+                    </h3>
+                    <Select
+                      options={feeOptions}
+                      isMulti
+                      className="mb-4"
+                      onChange={(selected) => {
+                        setSelectedFees(selected || []);
+                        // Reset quantity state for unselected fees
+                        const updatedQuantities = {};
+                        (selected || []).forEach((fee) => {
+                          updatedQuantities[fee.value] =
+                            feeQuantities[fee.value] || 1;
+                        });
+                        setFeeQuantities(updatedQuantities);
+                      }}
+                      value={selectedFees}
+                    />
+
+                    {selectedFees.map((fee) => (
+                      <div
+                        key={fee.value}
+                        className="flex items-center justify-between border rounded p-2 mb-2"
+                      >
+                        <span>{fee.label}</span>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            type="button"
+                            className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                            onClick={() => {
+                              setFeeQuantities((prev) => ({
+                                ...prev,
+                                [fee.value]: Math.max(
+                                  1,
+                                  (prev[fee.value] || 1) - 1
+                                ),
+                              }));
+                            }}
+                          >
+                            -
+                          </button>
+                          <span className="w-8 text-center">
+                            {feeQuantities[fee.value] || 1}
+                          </span>
+                          <button
+                            type="button"
+                            className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                            onClick={() => {
+                              setFeeQuantities((prev) => ({
+                                ...prev,
+                                [fee.value]: (prev[fee.value] || 1) + 1,
+                              }));
+                            }}
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* <div className="mt-4 font-bold">
+                      Total Fees: 
+                      {selectedFees
+                        .reduce((total, fee) => {
+                          const qty = feeQuantities[fee.value] || 1;
+                          return total + qty * fee.price;
+                        }, 0)
+                        .toFixed(2)}
+                    </div> */}
+                  </div>
+                )}
+
                 <div
                   className={`flex space-x-2 mt-4 ${
                     trans.find((t) => t.id === selectedId)?.weighments

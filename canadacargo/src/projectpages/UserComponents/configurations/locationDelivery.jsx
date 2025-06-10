@@ -27,7 +27,6 @@ export const LocationDelivery = () => {
   const [courierName, setcourierName] = useState("");
   const [price, setPrice] = useState("");
 
-  
   const addNewTaxUpdate = async () => {
     try {
       setIsLoading(true);
@@ -56,7 +55,7 @@ export const LocationDelivery = () => {
       Swal.fire({
         icon: "success",
         title: "Added Successfully!",
-        text: "The new destination has been added to the system.",
+        text: "The new location delivery has been added to the system.",
       });
 
       setIsLoading(false);
@@ -66,12 +65,12 @@ export const LocationDelivery = () => {
       // Show error message using SweetAlert2
       Swal.fire({
         icon: "error",
-        title: "Error Adding destination",
+        title: "Error Adding Location",
         text: error.response?.data?.message || error.message,
       });
 
       console.error(
-        "Error adding destination:",
+        "Error adding Location:",
         error.response?.data || error.message
       );
     }
@@ -100,7 +99,7 @@ export const LocationDelivery = () => {
       Swal.fire({
         icon: "success",
         title: " Deleted Successfully!",
-        text: "The selected Destination has been removed from the system.",
+        text: "The selected Location has been removed from the system.",
       });
 
       setIsLoading(false);
@@ -109,12 +108,12 @@ export const LocationDelivery = () => {
 
       Swal.fire({
         icon: "error",
-        title: "Error Deleting Destination",
+        title: "Error Deleting Location",
         text: error.response?.data?.message || error.message,
       });
 
       console.error(
-        "Error deleting Destination:",
+        "Error deleting Location:",
         error.response?.data || error.message
       );
     }
@@ -138,7 +137,7 @@ export const LocationDelivery = () => {
     } catch (error) {
       setIsLoading(false);
       console.error(
-        "Error fetching destination:",
+        "Error fetching Location:",
         error.response?.data || error.message
       );
       setAllTaxRates([]);

@@ -55,7 +55,7 @@ export const PieceTypes = () => {
       Swal.fire({
         icon: "success",
         title: "Added Successfully!",
-        text: "The new destination has been added to the system.",
+        text: "The new piece type has been added to the system.",
       });
 
       setIsLoading(false);
@@ -65,12 +65,12 @@ export const PieceTypes = () => {
       // Show error message using SweetAlert2
       Swal.fire({
         icon: "error",
-        title: "Error Adding destination",
+        title: "Error Adding type",
         text: error.response?.data?.message || error.message,
       });
 
       console.error(
-        "Error adding destination:",
+        "Error adding type:",
         error.response?.data || error.message
       );
     }
@@ -100,7 +100,7 @@ export const PieceTypes = () => {
       Swal.fire({
         icon: "success",
         title: " Deleted Successfully!",
-        text: "The selected Destination has been removed from the system.",
+        text: "The selected type has been removed from the system.",
       });
 
       setIsLoading(false);
@@ -109,12 +109,12 @@ export const PieceTypes = () => {
 
       Swal.fire({
         icon: "error",
-        title: "Error Deleting Destination",
+        title: "Error Deleting type",
         text: error.response?.data?.message || error.message,
       });
 
       console.error(
-        "Error deleting Destination:",
+        "Error deleting type:",
         error.response?.data || error.message
       );
     }
@@ -138,7 +138,7 @@ export const PieceTypes = () => {
     } catch (error) {
       setIsLoading(false);
       console.error(
-        "Error fetching destination:",
+        "Error fetching type:",
         error.response?.data || error.message
       );
       setAllTaxRates([]);

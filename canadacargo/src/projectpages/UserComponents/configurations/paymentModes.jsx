@@ -4,7 +4,6 @@ import axios from "axios";
 
 import { TaxHistoryTable } from "./tables/taxHistoryTable";
 import { PieceTypesTable } from "./tables/PieceTypesTable";
-import { DestinationTable } from "./tables/destinationTable";
 import { OriginTable } from "./tables/origintable";
 import { PaymentModesTable } from "./tables/paymentModesTable";
 import { getUserDetails } from "../../../projectcomponents/auth";

@@ -31,6 +31,9 @@ const {
   getProductType,
   createProductType,
   deleteProductType,
+  createExtraFee,
+  deleteExtraFee,
+  getAllExtraFees,
 } = require("../../controllers/configurationControllers/configurationControllers");
 const { authenticateUser } = require("../../middlewares/authMiddleware");
 
@@ -57,8 +60,11 @@ router.post("/deleteDestination", authenticateUser, deleteDestination);
 router.get("/getAllDestinations", authenticateUser, getAllDestinations);
 
 router.post("/createPieceType", authenticateUser, createPieceType);
+router.post("/createExtraFee", authenticateUser, createExtraFee);
+router.post("/deleteExtraFee", authenticateUser, deleteExtraFee);
 router.post("/deletePieceType", authenticateUser, deletePieceType);
 router.get("/getAllPieceTypes", authenticateUser, getAllPieceTypes);
+router.get("/getAllExtraFees", authenticateUser, getAllExtraFees);
 
 router.post("/updateShipmentCost", authenticateUser, updateShipmentCost);
 router.get("/getShipmentCost", authenticateUser, getShipmentCost);

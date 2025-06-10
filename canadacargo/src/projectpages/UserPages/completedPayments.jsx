@@ -104,13 +104,13 @@ function CompletedPayments() {
     setTrans(filteredTrans);
   };
 
-  // Function to handle the process click event
   const handleProcessClick = (shipment, pickup_fee) => {
     let calculations = calculateShipping(
       shipment?.items,
-      currentRate,
+      Number(shipment?.product_type_price),
       pieceTypes
     );
+
     const itemsList = `
     <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-top:10px">
       <thead>
@@ -135,7 +135,7 @@ function CompletedPayments() {
           .join("")}
       </tbody>
     </table>
-    <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-top:10px">
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-top:10px">
       <thead>
         <tr>
           <th style="border: 1px solid #ddd; padding: 8px;">Product Type</th>
@@ -143,7 +143,7 @@ function CompletedPayments() {
         </tr>
       </thead>
       <tbody>
-   <tr>
+       <tr>
             <td style="border: 1px solid #ddd; padding: 8px;">${
               shipment.product_type
             }</td>
@@ -162,6 +162,7 @@ function CompletedPayments() {
           <th style="border: 1px solid #ddd; padding: 8px;">Shipping Rate</th>
           <th style="border: 1px solid #ddd; padding: 8px;">Piece Price</th>
           <th style="border: 1px solid #ddd; padding: 8px;">Pickup Fee</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Extra Fee</th>
           <th style="border: 1px solid #ddd; padding: 8px;">Total</th>
         </tr>
       </thead>
@@ -180,32 +181,49 @@ function CompletedPayments() {
             <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
               calculations?.itemFee
             )?.toLocaleString()}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
-            pickup_fee
-          )?.toLocaleString()}</td>
             <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
-              calculations?.totalSum + Number(pickup_fee)
+              pickup_fee
+            )?.toLocaleString()}</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
+              shipment?.total_extra_fees || 0
+            )?.toLocaleString()}</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
+              calculations?.totalSum +
+                Number(pickup_fee) +
+                (shipment?.total_extra_fees
+                  ? Number(shipment?.total_extra_fees || 0)
+                  : 0)
             )?.toLocaleString()}</td>
           </tr>`
           )
           .join("")}
+
       </tbody>
     </table>
   `;
     Swal.fire({
-      title: "Details",
-      html: `Below are the details and breakdown of<br> ${itemsList} <br> ${itemsPriceList}`, // Use html instead of text
+      title: "Confirm",
+      html: `Are you sure the payment has been made?<br> ${itemsList} <br> ${itemsPriceList}`, // Use html instead of text
       icon: "warning",
-      showCancelButton: false,
-      showConfirmButton: false,
+      showCancelButton: true,
       confirmButtonText: "Yes, proceed!",
       cancelButtonText: "No, cancel!",
     }).then((result) => {
       if (result.isConfirmed) {
         processPayment(
+          shipment,
           shipment?.trans_id,
           calculations?.totalSum,
-          shipment.items
+          shipment.items,
+          shipment?.payment_mode,
+          calculations?.totalWeight,
+          calculations?.shippingRate,
+          calculations?.itemFee,
+          0,
+          0,
+          pickup_fee,
+          calculations?.totalWeight,
+          shipment?.total_extra_fees
         );
       }
     });
@@ -502,7 +520,13 @@ function CompletedPayments() {
     getPieceTypes();
   }, []);
 
-  function calculateShipping(items, currentRate, pieceTypes, pickup_price) {
+  function calculateShipping(
+    items,
+    currentRate,
+    pieceTypes,
+    pickup_price,
+    extra_fees
+  ) {
     if (items && items.length > 0) {
       const totalWeight = items.reduce(
         (sum, item) => sum + Number(item.weight),
@@ -519,7 +543,10 @@ function CompletedPayments() {
       }, 0);
 
       const totalSum =
-        shippingRate + itemFee + (pickup_price ? Number(pickup_price) : 0);
+        shippingRate +
+        itemFee +
+        (pickup_price ? Number(pickup_price) : 0) +
+        (extra_fees ? Number(extra_fees) : 0);
 
       return {
         totalWeight,
@@ -882,9 +909,10 @@ function CompletedPayments() {
                         {Number(
                           calculateShipping(
                             l.items,
-                            currentRate,
+                            l.product_type_price,
                             pieceTypes,
-                            l?.pickup_price
+                            l.pickup_price,
+                            l.total_extra_fees
                           )?.totalSum
                         )?.toLocaleString()}
                       </td>
@@ -1092,7 +1120,7 @@ function CompletedPayments() {
                                       <Text
                                         style={[styles.tableCell, styles.bold]}
                                       >
-                                        Custom Fee
+                                        Extra Fees
                                       </Text>
                                       <Text
                                         style={[styles.tableCell, styles.bold]}
@@ -1126,7 +1154,7 @@ function CompletedPayments() {
                                       <Text style={styles.tableCell}>
                                         N{" "}
                                         {Number(
-                                          l?.custom_fee
+                                          l?.total_extra_fees || 0
                                         )?.toLocaleString()}
                                       </Text>
                                       <Text style={styles.tableCell}>
@@ -1145,7 +1173,8 @@ function CompletedPayments() {
                                         N
                                         {(
                                           Number(l?.amount) +
-                                          Number(l?.pickup_price || 0)
+                                          Number(l?.pickup_price || 0) +
+                                          Number(l?.total_extra_fees || 0)
                                         )?.toLocaleString()}
                                       </Text>
                                     </View>

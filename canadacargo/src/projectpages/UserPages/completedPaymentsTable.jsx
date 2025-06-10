@@ -63,13 +63,13 @@ function CompletedPaymentsTable() {
     setTrans(filteredTrans); // Update state with filtered transactions
   };
 
-  // Function to handle the process click event
-  const handleProcessClick = (shipment) => {
+  const handleProcessClick = (shipment, pickup_fee) => {
     let calculations = calculateShipping(
       shipment?.items,
-      currentRate,
+      Number(shipment?.product_type_price),
       pieceTypes
     );
+
     const itemsList = `
     <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-top:10px">
       <thead>
@@ -94,6 +94,24 @@ function CompletedPaymentsTable() {
           .join("")}
       </tbody>
     </table>
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-top:10px">
+      <thead>
+        <tr>
+          <th style="border: 1px solid #ddd; padding: 8px;">Product Type</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Price/KG</th>
+        </tr>
+      </thead>
+      <tbody>
+       <tr>
+            <td style="border: 1px solid #ddd; padding: 8px;">${
+              shipment.product_type
+            }</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">₦${Number(
+              shipment.product_type_price
+            )?.toLocaleString()}</td>
+          </tr>
+      </tbody>
+    </table>
   `;
     const itemsPriceList = `
     <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-top:10px">
@@ -101,7 +119,9 @@ function CompletedPaymentsTable() {
         <tr>
           <th style="border: 1px solid #ddd; padding: 8px;">Weight (KG)</th>
           <th style="border: 1px solid #ddd; padding: 8px;">Shipping Rate</th>
-          <th style="border: 1px solid #ddd; padding: 8px;">Pice Price</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Piece Price</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Pickup Fee</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Extra Fee</th>
           <th style="border: 1px solid #ddd; padding: 8px;">Total</th>
         </tr>
       </thead>
@@ -121,28 +141,48 @@ function CompletedPaymentsTable() {
               calculations?.itemFee
             )?.toLocaleString()}</td>
             <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
-              calculations?.totalSum
+              pickup_fee
+            )?.toLocaleString()}</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
+              shipment?.total_extra_fees || 0
+            )?.toLocaleString()}</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
+              calculations?.totalSum +
+                Number(pickup_fee) +
+                (shipment?.total_extra_fees
+                  ? Number(shipment?.total_extra_fees || 0)
+                  : 0)
             )?.toLocaleString()}</td>
           </tr>`
           )
           .join("")}
+
       </tbody>
     </table>
   `;
     Swal.fire({
-      title: "Details",
-      html: `Below are the details and breakdown of<br> ${itemsList} <br> ${itemsPriceList}`, // Use html instead of text
+      title: "Confirm",
+      html: `Are you sure the payment has been made?<br> ${itemsList} <br> ${itemsPriceList}`, // Use html instead of text
       icon: "warning",
-      showCancelButton: false,
-      showConfirmButton: false,
+      showCancelButton: true,
       confirmButtonText: "Yes, proceed!",
       cancelButtonText: "No, cancel!",
     }).then((result) => {
       if (result.isConfirmed) {
         processPayment(
+          shipment,
           shipment?.trans_id,
           calculations?.totalSum,
-          shipment.items
+          shipment.items,
+          shipment?.payment_mode,
+          calculations?.totalWeight,
+          calculations?.shippingRate,
+          calculations?.itemFee,
+          0,
+          0,
+          pickup_fee,
+          calculations?.totalWeight,
+          shipment?.total_extra_fees
         );
       }
     });
@@ -419,7 +459,13 @@ function CompletedPaymentsTable() {
     getPieceTypes();
   }, []);
 
-  function calculateShipping(items, currentRate, pieceTypes) {
+  function calculateShipping(
+    items,
+    currentRate,
+    pieceTypes,
+    pickup_price,
+    extra_fees
+  ) {
     if (items && items.length > 0) {
       const totalWeight = items.reduce(
         (sum, item) => sum + Number(item.weight),
@@ -435,7 +481,11 @@ function CompletedPaymentsTable() {
         return sum + (pieceType ? Number(pieceType.price) : 0);
       }, 0);
 
-      const totalSum = shippingRate + itemFee;
+      const totalSum =
+        shippingRate +
+        itemFee +
+        (pickup_price ? Number(pickup_price) : 0) +
+        (extra_fees ? Number(extra_fees) : 0);
 
       return {
         totalWeight,
@@ -457,7 +507,20 @@ function CompletedPaymentsTable() {
     userToken && (
       <>
         <TitleCard
-          title={`Completed Payments (${trans.length})`}
+          title={`Completed Payments (${trans.length}) (₦ ${trans
+            ?.reduce((acc, l) => {
+              return (
+                acc +
+                  calculateShipping(
+                    l.items,
+                    l.product_type_price,
+                    pieceTypes,
+                    l.pickup_price,
+                    l.total_extra_fees
+                  )?.totalSum || 0
+              );
+            }, 0)
+            ?.toLocaleString()})`}
           topMargin="mt-2"
           TopSideButtons={
             <div className={"inline-block "}>
@@ -545,10 +608,15 @@ function CompletedPaymentsTable() {
                         {l.items === "[]" ? 0 : l?.items?.length}
                       </td>
                       <td className="truncate">
-                        ₦{" "}
+                        ₦
                         {Number(
-                          calculateShipping(l.items, currentRate, pieceTypes)
-                            ?.totalSum
+                          calculateShipping(
+                            l.items,
+                            l.product_type_price,
+                            pieceTypes,
+                            l.pickup_price,
+                            l.total_extra_fees
+                          )?.totalSum
                         )?.toLocaleString()}
                       </td>
 
@@ -556,7 +624,10 @@ function CompletedPaymentsTable() {
                         <div className="flex space-x-2">
                           <button
                             className="btn btn-sm btn-primary bg-blue-600"
-                            onClick={() => viewShipmentInfo(l)}
+                            onClick={() => {
+                              console.log(l);
+                              viewShipmentInfo(l);
+                            }}
                           >
                             <InformationCircleIcon className="text-white text-2xl h-6 w-6"></InformationCircleIcon>
                           </button>
@@ -565,331 +636,13 @@ function CompletedPaymentsTable() {
                             className="btn btn-sm btn-accent text-white bg-green-600"
                             onClick={() =>
                               handleProcessClick(
-                                trans.find((t) => t.trans_id === l.trans_id)
+                                trans.find((t) => t.trans_id === l.trans_id),
+                                l.pickup_price
                               )
-                            } // Call the function with the selected shipment
+                            }
                           >
                             <ArrowsRightLeftIcon className="text-white text-2xl h-6 w-6"></ArrowsRightLeftIcon>
                           </button>
-
-                          <PDFDownloadLink
-                            fileName={`${l.shipper_name}_invoice.pdf`}
-                            className="btn btn-sm btn-black text-white bg-slate-600 hover:bg-slate-900 transition-all"
-                            document={
-                              <Document>
-                                <Page size="A4" style={styles.page}>
-                                  {/* Header Section */}
-                                  <View style={styles.header}>
-                                    <Image
-                                      style={styles.logo}
-                                      src="/images/canadalogo.png" // Replace with your logo URL
-                                    />
-
-                                    <View style={styles.invoice}>
-                                      <Image
-                                        style={styles.logo2}
-                                        src="/images/canadalogo.png" // Replace with your logo URL
-                                      />
-                                      <br />
-                                      <Text style={styles.bold}>
-                                        Invoice #: CC0940728071
-                                      </Text>
-                                    </View>
-                                  </View>
-
-                                  <View style={styles.skyframe}>
-                                    <View style={styles.skyblock}>
-                                      <Image
-                                        style={styles.logo2}
-                                        src="/images/paid.png" // Replace with your logo URL
-                                      />
-                                      <Image
-                                        style={styles.logo2}
-                                        src="/images/highvalue.jpg" // Replace with your logo URL
-                                      />
-                                    </View>
-                                    <View style={styles.skyblock}>
-                                      <View style={styles.section}>
-                                        <Text style={styles.myhead}>
-                                          Payment Mode:
-                                        </Text>
-                                        <Text style={styles.subtext}>
-                                          {l.payment_mode}
-                                        </Text>
-                                      </View>
-                                      <View style={styles.section}>
-                                        <Text style={styles.myhead}>
-                                          Invoice No..:
-                                        </Text>
-                                        <Text style={styles.subtext}>
-                                          {l?.invoice_no}
-                                        </Text>
-                                      </View>
-                                      <View style={styles.section}>
-                                        <Text style={styles.myhead}>
-                                          Box Number:
-                                        </Text>
-                                        <Text style={styles.subtext}>
-                                          {" "}
-                                          {l.box_number}
-                                        </Text>
-                                      </View>
-                                    </View>
-                                    <View style={styles.skyblock}>
-                                      <View style={styles.section}>
-                                        <Text style={styles.myhead}>Date:</Text>
-                                        <Text style={styles.subtext}>
-                                          {new Date(
-                                            l?.date
-                                          )?.toLocaleDateString()}
-                                        </Text>
-                                      </View>
-                                      <View style={styles.section}>
-                                        <Text style={styles.myhead}>
-                                          Waybill No..:
-                                        </Text>
-                                        <Text style={styles.subtext}>
-                                          {l.trans_id}
-                                        </Text>
-                                      </View>
-                                    </View>
-                                    <View style={styles.skyblock}>
-                                      <Image
-                                        style={styles.logo3}
-                                        src="/images/paid.png" // Replace with your logo URL
-                                      />
-                                    </View>
-                                  </View>
-
-                                  {/* Payment Information */}
-
-                                  {/* Shipper and Receiver Information */}
-                                  <View style={styles.row}>
-                                    <View style={styles.col}>
-                                      <Text style={styles.bold}>
-                                        SHIPPER INFORMATION
-                                      </Text>
-                                      <Text style={styles.empty}></Text>
-                                      <Text style={styles.mytextt}>
-                                        Shipper Name:{" "}
-                                        {l.shipper_name?.toUpperCase()}
-                                      </Text>
-                                      <Text style={styles.empty2}></Text>
-
-                                      <Text style={styles.mytextt}>
-                                        Shipper Address:{" "}
-                                        {l.shipper_address?.toUpperCase()}
-                                      </Text>
-                                      <Text style={styles.empty2}></Text>
-
-                                      <Text style={styles.mytextt}>
-                                        Shipper Phone:{" "}
-                                        {l.shipper_phone?.toUpperCase()}
-                                      </Text>
-                                      <Text style={styles.empty2}></Text>
-
-                                      <Text style={styles.mytextt}>
-                                        Shipper Email:{" "}
-                                        {l.shipper_email?.toUpperCase()}
-                                      </Text>
-                                    </View>
-                                    <View style={styles.col}>
-                                      <Text style={styles.bold}>
-                                        RECEIVER INFORMATION
-                                      </Text>
-                                      <Text style={styles.empty}></Text>
-                                      <Text style={styles.mytextt}>
-                                        Receiver Name:{" "}
-                                        {l.receiver_name?.toUpperCase()}
-                                      </Text>
-                                      <Text style={styles.empty2}></Text>
-
-                                      <Text style={styles.mytextt}>
-                                        Receiver Address:{" "}
-                                        {l.receiver_address?.toUpperCase()}
-                                      </Text>
-                                      <Text style={styles.empty2}></Text>
-
-                                      <Text style={styles.mytextt}>
-                                        Receiver Phone:{" "}
-                                        {l.receiver_phone?.toUpperCase()}
-                                      </Text>
-                                      <Text style={styles.empty2}></Text>
-
-                                      <Text style={styles.mytextt}>
-                                        Receiver Email:{" "}
-                                        {l.receiver_email?.toUpperCase()}
-                                      </Text>
-                                    </View>
-                                  </View>
-
-                                  <Text style={styles.empty}></Text>
-
-                                  {/* Table Section */}
-                                  <View style={styles.table}>
-                                    <View style={styles.tableRow}>
-                                      <Text
-                                        style={[styles.tableCell, styles.bold]}
-                                      >
-                                        Weight (Kg)
-                                      </Text>
-                                      <Text
-                                        style={[styles.tableCell, styles.bold]}
-                                      >
-                                        Shipping Rate
-                                      </Text>
-                                      <Text
-                                        style={[styles.tableCell, styles.bold]}
-                                      >
-                                        Carton
-                                      </Text>
-                                      <Text
-                                        style={[styles.tableCell, styles.bold]}
-                                      >
-                                        Custom Fee
-                                      </Text>
-                                      <Text
-                                        style={[styles.tableCell, styles.bold]}
-                                      >
-                                        Doorstep Fee
-                                      </Text>
-                                      <Text
-                                        style={[styles.tableCell, styles.bold]}
-                                      >
-                                        Pickup Fee
-                                      </Text>
-                                      <Text
-                                        style={[styles.tableCell, styles.bold]}
-                                      >
-                                        Total
-                                      </Text>
-                                    </View>
-                                    <View style={styles.tableRow}>
-                                      <Text style={styles.tableCell}>
-                                        {l?.weight} Kg
-                                      </Text>
-                                      <Text style={styles.tableCell}>
-                                        N
-                                        {Number(
-                                          l?.shipping_rate
-                                        )?.toLocaleString()}
-                                      </Text>
-                                      <Text style={styles.tableCell}>
-                                        N {Number(l?.carton)?.toLocaleString()}
-                                      </Text>
-                                      <Text style={styles.tableCell}>
-                                        N{" "}
-                                        {Number(
-                                          l?.custom_fee
-                                        )?.toLocaleString()}
-                                      </Text>
-                                      <Text style={styles.tableCell}>
-                                        N{" "}
-                                        {Number(
-                                          l?.doorstep_fee
-                                        )?.toLocaleString()}
-                                      </Text>
-                                      <Text style={styles.tableCell}>
-                                        N{" "}
-                                        {Number(
-                                          l?.pickup_fee
-                                        )?.toLocaleString()}
-                                      </Text>
-                                      <Text style={styles.tableCell}>
-                                        N {Number(l?.amount)?.toLocaleString()}
-                                      </Text>
-                                    </View>
-                                  </View>
-
-                                  <Text style={styles.empty}></Text>
-                                  <Text style={styles.empty}></Text>
-
-                                  <Text style={styles.empty}></Text>
-
-                                  {/* Description Section */}
-                                  <View style={styles.section}>
-                                    <Text style={styles.bold}>DESCRIPTION</Text>
-                                    <Text style={styles.empty}></Text>
-
-                                    <Text>
-                                      Clothes Wrapper, Slippers, Boxer, Singlet,
-                                      Sponge, Hair Attachment, Dry Catfish, Shea
-                                      Butter, 2 YAM FLOURS...
-                                    </Text>
-                                  </View>
-                                  <Text style={styles.empty}></Text>
-                                  <Text style={styles.empty}></Text>
-                                  <Text style={styles.empty}></Text>
-                                  <Text style={styles.empty}></Text>
-                                  <Text style={styles.empty}></Text>
-
-                                  {/* Description Section */}
-                                  <View style={styles.section}>
-                                    <Text style={styles.bold}>Note:</Text>
-                                    <Text style={styles.empty2}></Text>
-
-                                    <Text>
-                                      Outside province at your own cost!
-                                    </Text>
-                                  </View>
-
-                                  <Text style={styles.empty}></Text>
-                                  <Text style={styles.empty}></Text>
-                                  <Text style={styles.empty}></Text>
-
-                                  {/* Description Section */}
-                                  <View style={styles.section}>
-                                    <Text style={styles.bold}>
-                                      TERMS AND CONDITION
-                                    </Text>
-                                    <Text style={styles.empty2}></Text>
-
-                                    <Text>
-                                      Shipping timelines are estimates and not
-                                      guaranteed as exact arrival timelines is
-                                      determined by airlines and carriers,
-                                      Canada Cargo is not liable for any delays
-                                      in shipping timelines as well as spoilt or
-                                      rotten items due to delays in shipping
-                                      timelines. All shipments are subject to
-                                      customs check both in Nigeria and
-                                      destination country, Canada Cargo is not
-                                      liable for any removal of items deemed
-                                      unfit to leave or enter into the
-                                      destination country by customs.(IITA)
-                                      neither are we liable for opened boxes.
-                                      your shipment is In Transit Same is
-                                      applicable to frozen shipments, we are not
-                                      liable for any damage to leaves or any
-                                      other fresh produce as a result of delay
-                                      or defrost of your items during transit.
-                                    </Text>
-                                    <Text style={styles.empty2}></Text>
-
-                                    <Text style={styles.bold}>
-                                      NB: IF YOU WANT INSURANCE, REQUEST FOR THE
-                                      RATES.
-                                    </Text>
-                                    <Text style={styles.empty}></Text>
-                                    <Text style={styles.empty}></Text>
-                                    <Text>
-                                      Tel: +1 647 916 9511, +234 904 404 9709 |
-                                      https://www.canadacargo.net | Email:
-                                      info@canadacargo.net
-                                    </Text>
-                                  </View>
-                                </Page>
-                              </Document>
-                            }
-                          >
-                            {({ blob, url, loading, error }) =>
-                              loading ? (
-                                "Loading document..."
-                              ) : (
-                                <ArrowDownIcon className="text-white text-2xl h-6 w-6"></ArrowDownIcon>
-                              )
-                            }
-                          </PDFDownloadLink>
                         </div>
                       </td>
                     </tr>

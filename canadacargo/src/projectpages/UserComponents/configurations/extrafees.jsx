@@ -4,18 +4,14 @@ import axios from "axios";
 
 import { TaxHistoryTable } from "./tables/taxHistoryTable";
 import { PieceTypesTable } from "./tables/PieceTypesTable";
-import { OriginTable } from "./tables/origintable";
-import { PaymentModesTable } from "./tables/paymentModesTable";
-import { CourierTable } from "./tables/courierTable";
 import Swal from "sweetalert2";
 import { getUserDetails } from "../../../projectcomponents/auth";
 
-export const Courier = () => {
+export const ExtraFees = () => {
   const [userExists, setUserExists] = useState("");
   const tokenRef = useRef(userExists);
 
   const [userDetails, setUserDetails] = useState("");
-  const [courierName, setcourierName] = useState("");
 
   useEffect(() => {
     tokenRef.current = userExists.token;
@@ -28,14 +24,18 @@ export const Courier = () => {
 
   const [userToken, setUserToken] = useState(() => getUserDetails().token);
 
+  const [courierName, setcourierName] = useState("");
+  const [price, setPrice] = useState("");
+
   const addNewTaxUpdate = async () => {
     try {
       setIsLoading(true);
 
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/createCourier`,
+        `${import.meta.env.VITE_API_URL}/createExtraFee`,
         {
           name: courierName,
+          price,
         },
         {
           headers: {
@@ -46,6 +46,7 @@ export const Courier = () => {
       );
 
       setcourierName("");
+      setPrice("");
 
       // Call the function to fetch all tax updates after adding the new courier
       getAllTaxUpdates();
@@ -53,8 +54,8 @@ export const Courier = () => {
       // Show success message using SweetAlert2
       Swal.fire({
         icon: "success",
-        title: "Courier Added Successfully!",
-        text: "The new courier has been added to the system.",
+        title: "Added Successfully!",
+        text: "The new fee has been added to the system.",
       });
 
       setIsLoading(false);
@@ -64,12 +65,12 @@ export const Courier = () => {
       // Show error message using SweetAlert2
       Swal.fire({
         icon: "error",
-        title: "Error Adding Courier",
+        title: "Error Adding type",
         text: error.response?.data?.message || error.message,
       });
 
       console.error(
-        "Error adding courier:",
+        "Error adding type:",
         error.response?.data || error.message
       );
     }
@@ -80,7 +81,7 @@ export const Courier = () => {
       setIsLoading(true);
 
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/deleteCourier`,
+        `${import.meta.env.VITE_API_URL}/deleteExtraFee`,
         {
           name: courierName,
         },
@@ -98,8 +99,8 @@ export const Courier = () => {
 
       Swal.fire({
         icon: "success",
-        title: "Courier Deleted Successfully!",
-        text: "The selected courier has been removed from the system.",
+        title: " Deleted Successfully!",
+        text: "The selected fee has been removed from the system.",
       });
 
       setIsLoading(false);
@@ -108,14 +109,41 @@ export const Courier = () => {
 
       Swal.fire({
         icon: "error",
-        title: "Error Deleting Courier",
+        title: "Error Deleting type",
         text: error.response?.data?.message || error.message,
       });
 
       console.error(
-        "Error deleting courier:",
+        "Error deleting type:",
         error.response?.data || error.message
       );
+    }
+  };
+  const getAllTaxUpdates = async () => {
+    try {
+      setIsLoading(true);
+
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/getAllExtraFees`,
+        {
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      setAllTaxRates(response.data.pieceTypes);
+      setIsLoading(false);
+
+    
+    } catch (error) {
+      setIsLoading(false);
+      console.error(
+        "Error fetching type:",
+        error.response?.data || error.message
+      );
+      setAllTaxRates([]);
     }
   };
 
@@ -131,31 +159,6 @@ export const Courier = () => {
       setDisplayingTax(mostRecentItem?.newrate);
     }
   }, [alltaxrates]);
-  const getAllTaxUpdates = async () => {
-    try {
-      setIsLoading(true);
-
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/getAllCouriers`,
-        {
-          headers: {
-            Authorization: `Bearer ${userToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      setAllTaxRates(response.data.couriers);
-      setIsLoading(false);
-    } catch (error) {
-      setIsLoading(false);
-      console.error(
-        "Error fetching tax updates:",
-        error.response?.data || error.message
-      );
-      setAllTaxRates([]);
-    }
-  };
 
   useEffect(() => {
     getAllTaxUpdates();
@@ -164,7 +167,7 @@ export const Courier = () => {
   return (
     <div className="grid md:grid-cols-6 gap-4 items-start">
       <div className="p-6 min-w-[300px] md:min-w-[10px] md:col-span-2   bg-white shadow-md rounded-lg ">
-        <h2 className="text-xl font-semibold mb-4">New Courier</h2>
+        <h2 className="text-xl font-semibold mb-4">New Extra fee</h2>
 
         <form
           onSubmit={(e) => {
@@ -174,7 +177,7 @@ export const Courier = () => {
         >
           <div className="mb-4">
             <label className="block mb-2 text-gray-700 font-medium">
-              Enter Courier Name
+              Enter extra fee name
             </label>
             <input
               type="text"
@@ -184,8 +187,20 @@ export const Courier = () => {
                 setcourierName(e.target.value);
               }}
               className="w-full p-2 border rounded-lg outline-none focus:border-blue-500"
-              min="0"
-              step=""
+              required
+            />
+
+            <label className="block mb-2 !mt-2 text-gray-700 font-medium">
+              Enter price
+            </label>
+            <input
+              type="number"
+              name="Tax"
+              value={price}
+              onChange={(e) => {
+                setPrice(e.target.value);
+              }}
+              className="w-full p-2 border rounded-lg outline-none focus:border-blue-500"
               required
             />
           </div>
@@ -208,10 +223,10 @@ export const Courier = () => {
         )}
       </div>
       <div className=" col-span-4">
-        <CourierTable
+        <PieceTypesTable
           alltaxrates={alltaxrates}
           deleteCourier={deleteCourier}
-        ></CourierTable>
+        ></PieceTypesTable>
       </div>
 
       {isLoading && (

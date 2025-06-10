@@ -525,7 +525,6 @@ const createPieceType = async (req, res) => {
   }
 
   try {
-    // Insert the new piece type into the database
     const pieceTypeDate = new Date();
 
     if (isNaN(pieceTypeDate.getTime())) {
@@ -582,6 +581,90 @@ const deletePieceType = async (req, res) => {
 
     await sequelize.query(
       "DELETE FROM `conf_piece_type` WHERE `name` = :name",
+      {
+        replacements: { name },
+      }
+    );
+
+    res.status(200).json({
+      message: "Piece type deleted successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Failed to delete piece type",
+      error: error.message,
+    });
+  }
+};
+const createExtraFee = async (req, res) => {
+  const { name, price } = req.body;
+
+  if (!name) {
+    return res.status(400).json({ message: "Extra fee name is required" });
+  }
+
+  if (!price || isNaN(price)) {
+    return res.status(400).json({ message: "Valid price is required" });
+  }
+
+  try {
+    const pieceTypeDate = new Date();
+
+    if (isNaN(pieceTypeDate.getTime())) {
+      return res.status(400).json({ message: "Invalid date format" });
+    }
+
+    await sequelize.query(
+      "INSERT INTO conf_extrafees (`name`, `price`, `date`) VALUES (:name, :price, :date)",
+      {
+        replacements: {
+          name,
+          price,
+          date: pieceTypeDate,
+        },
+      }
+    );
+
+    res.status(201).json({
+      message: "Fee created successfully",
+      pieceType: {
+        name,
+        price,
+        date: pieceTypeDate,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Failed to create piece type",
+      error: error.message,
+    });
+  }
+};
+
+const deleteExtraFee = async (req, res) => {
+  const { name } = req.body;
+
+  if (!name) {
+    return res.status(400).json({ message: "Piece type name is required" });
+  }
+
+  try {
+    const pieceTypeExists = await sequelize.query(
+      "SELECT `name` FROM `conf_extrafees` WHERE `name` = :name",
+      {
+        type: QueryTypes.SELECT,
+        replacements: { name },
+      }
+    );
+
+    if (pieceTypeExists.length === 0) {
+      return res.status(404).json({ message: "Piece type not found" });
+    }
+
+    await sequelize.query(
+      "DELETE FROM `conf_extrafees` WHERE `name` = :name",
       {
         replacements: { name },
       }
@@ -846,6 +929,31 @@ const getAllPieceTypes = async (req, res) => {
   try {
     const pieceTypes = await sequelize.query(
       "SELECT `name`, `price`, `date` FROM `conf_piece_type` WHERE 1",
+      {
+        type: QueryTypes.SELECT,
+      }
+    );
+
+    if (pieceTypes.length === 0) {
+      return res.status(404).json({ message: "No piece types found" });
+    }
+
+    res.status(200).json({
+      message: "Piece types fetched successfully",
+      pieceTypes,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Failed to fetch piece types",
+      error: error.message,
+    });
+  }
+};
+const getAllExtraFees= async (req, res) => {
+  try {
+    const pieceTypes = await sequelize.query(
+      "SELECT `name`, `price`, `date` FROM `conf_extrafees` WHERE 1",
       {
         type: QueryTypes.SELECT,
       }
@@ -1213,4 +1321,7 @@ module.exports = {
   updateClearingFeeConfiguration,
   getClearingTaxConfiguration,
   updateClearingTaxConfiguration,
+  createExtraFee, 
+  deleteExtraFee,
+  getAllExtraFees
 };
