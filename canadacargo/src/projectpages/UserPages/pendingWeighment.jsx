@@ -839,7 +839,7 @@ function PendingWeighments() {
                       >
                         {!readerRef.current ? "Not Connected" : "Weigh"}
                       </button>
-                      {/* <button
+                      <button
                         onClick={async () => {
                           const scaleWeight = generateRandomWeight();
 
@@ -856,7 +856,7 @@ function PendingWeighments() {
                         className="btn btn-sm btn-primary"
                       >
                         Weigh
-                      </button> */}
+                      </button>
                       <button
                         onClick={() => removeItem(item.name)}
                         className="btn btn-sm btn-danger"

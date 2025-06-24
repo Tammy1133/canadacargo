@@ -663,12 +663,9 @@ const deleteExtraFee = async (req, res) => {
       return res.status(404).json({ message: "Piece type not found" });
     }
 
-    await sequelize.query(
-      "DELETE FROM `conf_extrafees` WHERE `name` = :name",
-      {
-        replacements: { name },
-      }
-    );
+    await sequelize.query("DELETE FROM `conf_extrafees` WHERE `name` = :name", {
+      replacements: { name },
+    });
 
     res.status(200).json({
       message: "Piece type deleted successfully",
@@ -802,7 +799,6 @@ const createProductType = async (req, res) => {
     });
   }
 };
-
 
 const getLocationDelivery = async (req, res) => {
   try {
@@ -950,7 +946,7 @@ const getAllPieceTypes = async (req, res) => {
     });
   }
 };
-const getAllExtraFees= async (req, res) => {
+const getAllExtraFees = async (req, res) => {
   try {
     const pieceTypes = await sequelize.query(
       "SELECT `name`, `price`, `date` FROM `conf_extrafees` WHERE 1",
@@ -1321,7 +1317,7 @@ module.exports = {
   updateClearingFeeConfiguration,
   getClearingTaxConfiguration,
   updateClearingTaxConfiguration,
-  createExtraFee, 
+  createExtraFee,
   deleteExtraFee,
-  getAllExtraFees
+  getAllExtraFees,
 };

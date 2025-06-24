@@ -55,6 +55,8 @@ export const TrackShipment = () => {
       setShipmentInfo(response.data.shipmentInfo);
       setShipmentItems(response.data.shipmentItems);
 
+      console.log(response.data.shipmentItems);
+
       setLoggedIn(true);
 
       setLoading(false);

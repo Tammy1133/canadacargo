@@ -929,7 +929,7 @@ function CompletedPayments() {
                             <InformationCircleIcon className="text-white text-2xl h-6 w-6"></InformationCircleIcon>
                           </button>
 
-                          <button
+                          {/* <button
                             className="btn btn-sm btn-accent text-white bg-green-600"
                             onClick={() =>
                               handleProcessClick(
@@ -939,7 +939,7 @@ function CompletedPayments() {
                             }
                           >
                             <ArrowsRightLeftIcon className="text-white text-2xl h-6 w-6"></ArrowsRightLeftIcon>
-                          </button>
+                          </button> */}
 
                           <PDFDownloadLink
                             fileName={`${l.shipper_name}_invoice.pdf`}
