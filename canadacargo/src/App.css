@@ -103,8 +103,8 @@ td {
   font-size: 12px !important;
 }
 
-.provincebg{
-  background-image: url("/images/canadabg.jpg");
+.provincebg {
+  background-image: url("/images/canadabg.png");
   min-height: 100vh;
   background-position: center;
   background-size: cover;
