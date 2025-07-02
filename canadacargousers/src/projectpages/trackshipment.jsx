@@ -12,10 +12,15 @@ export const TrackShipment = () => {
   const [loading, setLoading] = useState(false);
   const [shipmentInfo, setShipmentInfo] = useState({});
   const [shipmentItems, setShipmentItems] = useState([]);
+  const [shipmentLogs, setShipmentLogs] = useState([]);
+
   const params = useParams();
   const [selectedProvince, setSelectedProvince] = useState("actions");
   const [address, setAddress] = useState("");
   const [activeTab, setActiveTab] = useState("shipmentDetails");
+
+  console.log(shipmentItems);
+
   const provincesAndTerritories = [
     "Alberta",
     "British Columbia",
@@ -53,9 +58,20 @@ export const TrackShipment = () => {
       });
 
       setShipmentInfo(response.data.shipmentInfo);
-      setShipmentItems(response.data.shipmentItems);
 
-      console.log(response.data.shipmentItems);
+      const rawLogs = response.data.shipmentInfo?.logs;
+
+      const parsedLogs = rawLogs ? JSON.parse(rawLogs) : {};
+      const formattedLogs = Object.entries(parsedLogs).map(([key, time]) => ({
+        description: key
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (l) => l.toUpperCase()),
+        time: time,
+      }));
+
+      setShipmentLogs(formattedLogs);
+
+      setShipmentItems(response.data.shipmentItems);
 
       setLoggedIn(true);
 
@@ -190,6 +206,14 @@ export const TrackShipment = () => {
                 >
                   Items
                 </button>
+                <button
+                  className={`${
+                    activeTab === "logs" ? "text-blue-600" : "text-gray-600"
+                  } hover:text-blue-600`}
+                  onClick={() => setActiveTab("logs")}
+                >
+                  Logs
+                </button>
               </div>
 
               <div className="mt-6">
@@ -293,6 +317,42 @@ export const TrackShipment = () => {
                         </tbody>
                       </table>
                     </div>
+                  </div>
+                )}
+
+                {activeTab === "logs" && (
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold text-gray-700 mb-4">
+                      Shipment Logs
+                    </h3>
+                    {shipmentLogs.length > 0 ? (
+                      <ul className="space-y-4">
+                        {shipmentLogs.map((log, index) => {
+                          const hasTime = !!log.time;
+                          return (
+                            <li
+                              key={index}
+                              className={`p-4 rounded-md shadow-sm border-l-4 ${
+                                hasTime
+                                  ? "bg-green-100 border-green-500"
+                                  : "bg-gray-100 border-gray-300"
+                              }`}
+                            >
+                              <p className="text-sm font-medium text-gray-700">
+                                {log.description}
+                              </p>
+                              {hasTime && (
+                                <p className="text-xs text-gray-600">
+                                  {new Date(log.time).toLocaleString()}
+                                </p>
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : (
+                      <p className="text-gray-500">No logs available.</p>
+                    )}
                   </div>
                 )}
               </div>

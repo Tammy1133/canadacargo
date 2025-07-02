@@ -28,6 +28,9 @@ export const OtherProvince = () => {
   const [activeTab, setActiveTab] = useState("actions");
   const [isLoading, setIsLoading] = useState("");
   const [idLoading, setIDLoading] = useState("");
+
+  console.log(shipmentInfo);
+
   const provincesAndTerritories = [
     "Alberta",
     "British Columbia",
@@ -250,7 +253,7 @@ export const OtherProvince = () => {
                     setTransactionId(e.target.value);
                   }}
                   placeholder="Enter your tracking number"
-                  className="w-full mt-1 px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full mt-1 px-4 py-2 text-gray-700 !bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
               <div>
@@ -268,7 +271,7 @@ export const OtherProvince = () => {
                     setEmail(e.target.value);
                   }}
                   placeholder="Enter your email"
-                  className="w-full mt-1 px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full mt-1 px-4 py-2 text-gray-700  border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none !bg-white"
                 />
               </div>
               <button
@@ -380,7 +383,7 @@ export const OtherProvince = () => {
                         type="text"
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
-                        className="border border-gray-300 rounded px-2 py-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="border border-gray-300 rounded px-2 py-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 !bg-white text-black"
                       />
                     </div>
 
@@ -390,7 +393,7 @@ export const OtherProvince = () => {
                         type="text"
                         value={address}
                         onChange={(e) => setAddress(e.target.value)}
-                        className="border border-gray-300 rounded px-2 py-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="border border-gray-300 rounded px-2 py-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 !bg-white text-black"
                       />
                     </div>
 
@@ -400,7 +403,7 @@ export const OtherProvince = () => {
                         type="text"
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
-                        className="border border-gray-300 rounded px-2 py-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="border border-gray-300 rounded px-2 py-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 !bg-white text-black"
                       />
                     </div>
 
@@ -412,7 +415,7 @@ export const OtherProvince = () => {
                         type="text"
                         value={aptUnitNo}
                         onChange={(e) => setAptUnitNo(e.target.value)}
-                        className="border border-gray-300 rounded px-2 py-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="border border-gray-300 rounded px-2 py-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 !bg-white text-black"
                       />
                     </div>
                     {/* <div>
@@ -434,7 +437,7 @@ export const OtherProvince = () => {
                         type="text"
                         value={postalCode}
                         onChange={(e) => setPostalCode(e.target.value)}
-                        className="border border-gray-300 rounded px-2 py-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="border border-gray-300 rounded px-2 py-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 !bg-white text-black"
                       />
                     </div>
 
@@ -446,7 +449,7 @@ export const OtherProvince = () => {
                         type="text"
                         value={phoneNo}
                         onChange={(e) => setPhoneNo(e.target.value)}
-                        className="border border-gray-300 rounded px-2 py-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="border border-gray-300 rounded px-2 py-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 !bg-white text-black"
                       />
                     </div>
                     <button
@@ -480,10 +483,7 @@ export const OtherProvince = () => {
                         <span className="font-semibold">Shipment Type:</span>{" "}
                         {shipmentInfo?.shipment_type || "N/A"}
                       </p>
-                      <p>
-                        <span className="font-semibold">Box Number:</span>{" "}
-                        {shipmentInfo?.box_number || "N/A"}
-                      </p>
+
                       <p>
                         <span className="font-semibold">Courier:</span>{" "}
                         {shipmentInfo?.courier || "N/A"}
@@ -543,7 +543,7 @@ export const OtherProvince = () => {
                               Item Name
                             </th>
                             <th className="py-2 px-4 border-b text-sm font-semibold text-gray-600">
-                              Piece Type
+                              Box Number
                             </th>
                             <th className="py-2 px-4 border-b text-sm font-semibold text-gray-600">
                               Weight
@@ -560,7 +560,7 @@ export const OtherProvince = () => {
                                 {eachItem?.name}
                               </td>
                               <td className="py-3 px-4 border-b text-sm text-gray-700">
-                                {eachItem?.type}
+                                {eachItem?.box_number}
                               </td>
                               <td className="py-3 px-4 border-b text-sm text-gray-700">
                                 {eachItem?.weight} Kg

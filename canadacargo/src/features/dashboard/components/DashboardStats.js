@@ -12,17 +12,9 @@ function DashboardStats({ title, icon, value, description, colorIndex }) {
   return (
     <div className="stats shadow">
       <div className="stat">
-        <div
-          className={`stat-figure dark:text-slate-300 text-sm text-[#2d8dc5]`}
-        >
-          {icon}
-        </div>
-        <div className="!text-sm dark:text-slate-300">{title}</div>
-        <div
-          className={` !font-semibold !text-xl dark:text-slate-300 text-[#2d8dc5]`}
-        >
-          {value}
-        </div>
+        <div className={`stat-figure text-sm !text-black`}>{icon}</div>
+        <div className="!text-sm text-black">{title}</div>
+        <div className={` !font-semibold !text-xl  !text-black`}>{value}</div>
       </div>
     </div>
   );

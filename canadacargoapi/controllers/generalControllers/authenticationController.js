@@ -68,7 +68,6 @@ const login = async (req, res) => {
 };
 
 const register = async (req, res) => {
-
   const { email, firstname, lastname, password, modules } = req.body;
 
   // Validate required fields
@@ -102,7 +101,6 @@ const register = async (req, res) => {
     const stringifiedModules = JSON.stringify(modules);
 
     console.log(req.user);
-    
 
     await sequelize.query(
       `INSERT INTO \`appusers\` 
@@ -115,7 +113,7 @@ const register = async (req, res) => {
           firstname,
           lastname,
           modules: stringifiedModules,
-          location:req.user?.location
+          location: req.user?.location,
         },
         type: QueryTypes.INSERT,
       }
@@ -277,13 +275,12 @@ const getShipmentInfoByPhone = async (req, res) => {
 const getAllUsers = async (req, res) => {
   try {
     const users = await sequelize.query(
-      'SELECT * FROM appusers WHERE location = :location',
+      "SELECT * FROM appusers WHERE location = :location",
       {
         replacements: { location: req.user.location },
         type: QueryTypes.SELECT,
       }
     );
-    
 
     if (users.length === 0) {
       return res.status(404).json({ message: "No users found" });
@@ -562,8 +559,9 @@ const authenticateUserSide = async (req, res) => {
     // Fetch the shipment info from the database
     const shipmentInfo = await sequelize.query(
       `SELECT * 
-       FROM \`shipment_info\` 
-       WHERE \`shipper_email\` = :email AND \`trans_id\` = :trans_id`,
+   FROM \`shipment_info\` 
+   WHERE (\`shipper_email\` = :email OR \`receiver_email\` = :email) 
+   AND \`trans_id\` = :trans_id`,
       {
         type: QueryTypes.SELECT,
         replacements: { email, trans_id },
@@ -579,8 +577,7 @@ const authenticateUserSide = async (req, res) => {
 
     // Fetch all items associated with the trans_id
     const shipmentItems = await sequelize.query(
-      `SELECT \`trans_id\`, \`name\`, \`type\`, \`weight\`, \`status\`, 
-              \`item_trans_id\`, \`tracking_number\` 
+      `SELECT *
        FROM \`shipment_items\` 
        WHERE \`trans_id\` = :trans_id`,
       {

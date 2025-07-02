@@ -174,17 +174,13 @@ function UserDashboard() {
           {statsData.map((d, k) => {
             const { icon, title, value } = d;
             return (
-              <div className="stats shadow" key={k}>
+              <div className="stats shadow !text-black" key={k}>
                 <div className="stat">
-                  <div
-                    className={`stat-figure dark:text-slate-300 text-sm text-[#2d8dc5]`}
-                  >
+                  <div className={`stat-figure text-sm !text-black`}>
                     {icon}
                   </div>
-                  <div className="!text-sm dark:text-slate-300">{title}</div>
-                  <div
-                    className={`!font-semibold !text-xl dark:text-slate-300 text-[#2d8dc5]`}
-                  >
+                  <div className="!text-sm ">{title}</div>
+                  <div className={`!font-semibold !text-xl  !text-black`}>
                     {value}
                   </div>
                 </div>

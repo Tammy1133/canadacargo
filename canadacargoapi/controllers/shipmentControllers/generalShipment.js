@@ -4,26 +4,23 @@ const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const path = require("path");
 const multer = require("multer");
-const moment = require('moment-timezone');
-
+const moment = require("moment-timezone");
 
 const upload = multer();
 
 const transporter = nodemailer.createTransport({
-  host: 'mail.canadacargo.net',        
-  port: 465,                           
-  secure: true,                      
+  host: "mail.canadacargo.net",
+  port: 465,
+  secure: true,
   auth: {
-    user: 'info@canadacargo.net',      
-    pass: 'cargodeliveryinfo',         
+    user: "info@canadacargo.net",
+    pass: "cargodeliveryinfo",
   },
   tls: {
-    rejectUnauthorized: false,      
+    rejectUnauthorized: false,
   },
-  debug: true,                        
+  debug: true,
 });
-
-
 
 const createShipment = async (req, res) => {
   const {
@@ -49,7 +46,7 @@ const createShipment = async (req, res) => {
     province,
     product_type,
     product_type_price,
-    prepared_by
+    prepared_by,
   } = req.body;
 
   // Validate required fields individually
@@ -116,26 +113,35 @@ const createShipment = async (req, res) => {
   try {
     const generateRandomTransId = () => {
       const now = new Date();
-    
-      const pad = (n) => n.toString().padStart(2, '0');
-    
-      const timestamp = 
+
+      const pad = (n) => n.toString().padStart(2, "0");
+
+      const timestamp =
         pad(now.getMonth() + 1) +
         pad(now.getDate()) +
         pad(now.getMinutes()) +
         pad(now.getSeconds());
-    
+
       const randomDigits = Math.floor(Math.random() * 90 + 10);
-    
+
       return `CC${timestamp}${randomDigits}`;
     };
-    
 
     const trans_id = generateRandomTransId();
 
-    const moment_date = moment.tz('Africa/Lagos');
+    const moment_date = moment.tz("Africa/Lagos");
 
-    const created_date = moment_date.format('YYYY-MM-DD HH:mm:ss')
+    const created_date = moment_date.format("YYYY-MM-DD HH:mm:ss");
+
+    let allLogs = {
+      shipment_created: created_date,
+      items_weighed: null,
+      payment_completed: null,
+      out_of_office: null,
+      in_transit: null,
+      arrived: null,
+      delivered: null,
+    };
 
     await sequelize.query(
       `INSERT INTO shipment_info 
@@ -143,13 +149,13 @@ const createShipment = async (req, res) => {
              receiver_phone, receiver_address, receiver_email, shipment_type, box_number, 
              courier, payment_mode, origin, destination, pickup_date, expected_date_delivery, 
              comments, trans_id, status, created_date, pickup_location, pickup_price, province,product_type,
-    product_type_price, location, prepared_by) 
+    product_type_price, location, prepared_by, logs) 
            VALUES 
             (:shipper_name, :shipper_phone, :shipper_address, :shipper_email, :receiver_name, 
              :receiver_phone, :receiver_address, :receiver_email, :shipment_type, :box_number, 
              :courier, :payment_mode, :origin, :destination, :pickup_date, :expected_date_delivery, 
              :comments, :trans_id, :status, :created_date, :pickup_location, :pickup_price, :province, :product_type,
-    :product_type_price, :location, :prepared_by)`,
+    :product_type_price, :location, :prepared_by, :logs)`,
       {
         replacements: {
           shipper_name,
@@ -176,9 +182,10 @@ const createShipment = async (req, res) => {
           pickup_price,
           province,
           product_type,
-          product_type_price, 
-          location:req.user.location,
-          prepared_by:`${req.user.lastname} ${req.user.firstname}`
+          product_type_price,
+          location: req.user.location,
+          prepared_by: `${req.user.lastname} ${req.user.firstname}`,
+          logs: JSON.stringify(allLogs),
         },
       }
     );
@@ -234,7 +241,9 @@ const updateShipment = async (req, res) => {
 
   // Validate trans_id
   if (!trans_id || trans_id.trim() === "") {
-    return res.status(400).json({ message: "Transaction ID (trans_id) is required" });
+    return res
+      .status(400)
+      .json({ message: "Transaction ID (trans_id) is required" });
   }
 
   // Validate required fields (example for a few — add more if needed)
@@ -245,7 +254,9 @@ const updateShipment = async (req, res) => {
   // Add other field validations here if needed...
 
   try {
-    const updated_date = moment().tz('Africa/Lagos').format('YYYY-MM-DD HH:mm:ss');
+    const updated_date = moment()
+      .tz("Africa/Lagos")
+      .format("YYYY-MM-DD HH:mm:ss");
 
     const [updateResult] = await sequelize.query(
       `UPDATE shipment_info SET
@@ -318,7 +329,6 @@ const updateShipment = async (req, res) => {
   }
 };
 
-
 const getPendingWeighments = async (req, res) => {
   try {
     // Query to fetch pending weighments
@@ -356,8 +366,6 @@ const getPendingWeighments = async (req, res) => {
     ORDER BY 
       si.created_date DESC
   `;
-  
-
 
     // Execute the query to fetch pending weighments and shipment info
     const pendingWeighments = await sequelize.query(pendingWeighmentsQuery, {
@@ -403,7 +411,7 @@ const getPendingWeighments = async (req, res) => {
         weight: item.weight,
         status: item.status,
         item_trans_id: item.item_trans_id,
-        box_number: item?.box_number
+        box_number: item?.box_number,
       });
       return acc;
     }, {});
@@ -428,9 +436,8 @@ const getPendingWeighments = async (req, res) => {
 };
 
 const updateItems = async (req, res) => {
-  const { trans_id, items, extra_fees, total_extra_fees, feequantities } = req.body;
-
-  
+  const { trans_id, items, extra_fees, total_extra_fees, feequantities } =
+    req.body;
 
   if (!trans_id || trans_id.trim() === "") {
     return res.status(400).json({ message: "Transaction ID is required" });
@@ -454,11 +461,15 @@ const updateItems = async (req, res) => {
       const insertPromises = items.map((item) => {
         const { name, type, weight, box_number } = item;
         if (!name || !type || !weight || !box_number) {
-          throw new Error("Each item must have a name, type, box number and weight");
+          throw new Error(
+            "Each item must have a name, type, box number and weight"
+          );
         }
 
         const item_trans_id =
-          trans_id + "_" + Math.random().toString(36).substr(2, 4).toUpperCase();
+          trans_id +
+          "_" +
+          Math.random().toString(36).substr(2, 4).toUpperCase();
 
         return sequelize.query(
           `INSERT INTO shipment_items 
@@ -491,7 +502,7 @@ const updateItems = async (req, res) => {
             trans_id,
             extra_fees: JSON.stringify(extra_fees || []),
             total_extra_fees: total_extra_fees || 0,
-            feequantities:JSON.stringify(feequantities || {})
+            feequantities: JSON.stringify(feequantities || {}),
           },
           transaction,
         }
@@ -506,7 +517,9 @@ const updateItems = async (req, res) => {
           ...item,
           status: "Pending",
           item_trans_id:
-            trans_id + "_" + Math.random().toString(36).substr(2, 4).toUpperCase(),
+            trans_id +
+            "_" +
+            Math.random().toString(36).substr(2, 4).toUpperCase(),
         })),
         extra_fees,
         total_extra_fees,
@@ -527,7 +540,6 @@ const updateItems = async (req, res) => {
 const processPayment = async (req, res) => {
   const { trans_id } = req.body;
 
-  // Check if trans_id is provided
   if (!trans_id) {
     return res.status(400).json({
       message: "Transaction ID (trans_id) is required.",
@@ -563,9 +575,7 @@ const processPayment = async (req, res) => {
       await sequelize.query(
         `INSERT INTO pending_payment (trans_id) VALUES (:trans_id)`,
         {
-          replacements: {
-            trans_id,
-          },
+          replacements: { trans_id },
           transaction,
         }
       );
@@ -578,16 +588,48 @@ const processPayment = async (req, res) => {
         }
       );
 
+      // Get current logs
+      const [shipmentData] = await sequelize.query(
+        `SELECT logs FROM shipment_info WHERE trans_id = :trans_id`,
+        {
+          replacements: { trans_id },
+          transaction,
+        }
+      );
+
+      if (!shipmentData || shipmentData.length === 0) {
+        throw new Error("Shipment not found for provided trans_id.");
+      }
+
+      const currentLogs = JSON.parse(shipmentData[0].logs) || {};
+      const moment_date = moment.tz("Africa/Lagos");
+      const currentTime = moment_date.format("YYYY-MM-DD HH:mm:ss");
+
+      const updatedLogs = {
+        ...currentLogs,
+        items_weighed: currentTime,
+      };
+
+      await sequelize.query(
+        `UPDATE shipment_info SET logs = :logs WHERE trans_id = :trans_id`,
+        {
+          replacements: {
+            logs: JSON.stringify(updatedLogs),
+            trans_id,
+          },
+          transaction,
+        }
+      );
+
       await transaction.commit();
 
       res.status(200).json({
         message:
-          "Payment processing successful. Shipment status updated, transaction moved to pending_payment, and item removed from pending_weighment.",
+          "Payment processing successful. Shipment status updated, logs updated, transaction moved to pending_payment, and item removed from pending_weighment.",
         items: shipmentItems,
       });
     } catch (error) {
       await transaction.rollback();
-
       console.error("Error processing payment:", error);
       res.status(500).json({
         message: "Failed to process payment.",
@@ -876,14 +918,13 @@ const getMostRecentCounter = async (req, res) => {
     await transaction.commit();
 
     console.log(counterRecord);
-    
 
     const counter = counterRecord ? counterRecord.counter : 0;
     return res.status(200).json({ counter });
   } catch (error) {
     await transaction.rollback();
-    console.error('Error fetching most recent counter:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error("Error fetching most recent counter:", error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -899,13 +940,10 @@ const completePayment = async (req, res) => {
     custom_fee,
     doorstep_fee,
     pickup_fee,
-    invoice_no
+    invoice_no,
   } = req.body;
 
   try {
-
-
-    
     if (
       !trans_id ||
       !amount ||
@@ -927,7 +965,7 @@ const completePayment = async (req, res) => {
     if (!shipmentInfo) {
       return res.status(404).json({ message: "Shipment info not found." });
     }
-    const transaction = await sequelize.transaction();   
+    const transaction = await sequelize.transaction();
     const logoPath = path.join(__dirname, "logo.png");
     const emailSubject = `Shipment processed successfully: ${trans_id}`;
     const emailBody = `
@@ -1060,7 +1098,6 @@ const completePayment = async (req, res) => {
         ),
       ]);
 
-
       const currentDate = new Date().toISOString();
       await sequelize.query(
         `INSERT INTO completed_payments (
@@ -1085,6 +1122,39 @@ const completePayment = async (req, res) => {
           transaction,
         }
       );
+      // Get current logs
+      const [shipmentData] = await sequelize.query(
+        `SELECT logs FROM shipment_info WHERE trans_id = :trans_id`,
+        {
+          replacements: { trans_id },
+          transaction,
+        }
+      );
+
+      if (!shipmentData || shipmentData.length === 0) {
+        throw new Error("Shipment logs not found for provided trans_id.");
+      }
+
+      // Corrected access to the first element in the array
+      const currentLogs = JSON.parse(shipmentData[0].logs);
+      const moment_date = moment.tz("Africa/Lagos");
+      const currentTime = moment_date.format("YYYY-MM-DD HH:mm:ss");
+
+      // Update the appropriate log field
+      currentLogs.payment_completed = currentTime;
+
+      console.log(currentLogs);
+
+      await sequelize.query(
+        `UPDATE shipment_info SET logs = :logs WHERE trans_id = :trans_id`,
+        {
+          replacements: {
+            logs: JSON.stringify(currentLogs),
+            trans_id,
+          },
+          transaction,
+        }
+      );
 
       await transaction.commit();
     } catch (error) {
@@ -1100,8 +1170,6 @@ const completePayment = async (req, res) => {
       .json({ message: "Failed to complete payment.", error: error.message });
   }
 };
-
-
 
 const getCompletedPayments = async (req, res) => {
   const { startDate, endDate } = req.body;
@@ -1193,7 +1261,7 @@ const getCompletedPayments = async (req, res) => {
         },
       }
     );
-    
+
     if (results.length === 0) {
       return res.status(404).json({
         message: "No completed payments found for the given date range.",
@@ -1311,7 +1379,8 @@ const getShipmentItems = async (req, res) => {
 
     if (shipments.length === 0) {
       return res.status(404).json({
-        message: "No shipment items found for the specified date range and location.",
+        message:
+          "No shipment items found for the specified date range and location.",
       });
     }
 
@@ -1340,7 +1409,9 @@ const getShipmentItems = async (req, res) => {
       })
     );
 
-    const filteredResults = processedResults.filter((result) => result !== null);
+    const filteredResults = processedResults.filter(
+      (result) => result !== null
+    );
 
     if (filteredResults.length === 0) {
       return res.status(404).json({
@@ -1417,7 +1488,8 @@ const getAllShipmentItems = async (req, res) => {
 
     if (shipments.length === 0) {
       return res.status(404).json({
-        message: "No shipment items found for the specified date range and location.",
+        message:
+          "No shipment items found for the specified date range and location.",
       });
     }
 
@@ -1446,7 +1518,9 @@ const getAllShipmentItems = async (req, res) => {
       })
     );
 
-    const filteredResults = processedResults.filter((result) => result !== null);
+    const filteredResults = processedResults.filter(
+      (result) => result !== null
+    );
 
     if (filteredResults.length === 0) {
       return res.status(404).json({
@@ -1466,7 +1540,6 @@ const getAllShipmentItems = async (req, res) => {
     });
   }
 };
-
 
 const getBarcodeShipmentItems = async (req, res) => {
   const { start_date, end_date } = req.query;
@@ -1524,7 +1597,7 @@ const getBarcodeShipmentItems = async (req, res) => {
         },
       }
     );
-    
+
     // If no shipments are found, return a 404 response
     if (shipments.length === 0) {
       return res.status(404).json({
@@ -1589,7 +1662,6 @@ const getShipmentInfoByTransId = async (req, res) => {
     });
   }
 
-
   try {
     // Query to fetch the specific item using item_trans_id
     const [item] = await sequelize.query(
@@ -1600,6 +1672,7 @@ const getShipmentInfoByTransId = async (req, res) => {
         type, 
         weight, 
         status, 
+        box_number,
         item_trans_id 
       FROM 
         shipment_items 
@@ -1628,6 +1701,7 @@ const getShipmentInfoByTransId = async (req, res) => {
         type, 
         weight, 
         status, 
+        box_number,
         item_trans_id 
       FROM 
         shipment_items 
@@ -1663,7 +1737,8 @@ const getShipmentInfoByTransId = async (req, res) => {
         comments, 
         trans_id, 
         status, 
-        created_date 
+        created_date,
+        province
       FROM 
         shipment_info 
       WHERE 
@@ -1681,14 +1756,6 @@ const getShipmentInfoByTransId = async (req, res) => {
         message: `No shipment information found for Item: ${item.trans_id}.`,
       });
     }
-
-    console.log({
-      data: {
-        searchedItem: item,
-        allItems: allItems,
-        shipmentInfo: shipmentInfo,
-      },
-    });
 
     // Combine the data and return the response
     res.status(200).json({
@@ -1751,7 +1818,6 @@ const getShipmentInfoForEdit = async (req, res) => {
   }
 };
 
-
 const updateItemStatusToOutOfOffice = async (req, res) => {
   const { item_trans_id, trans_id, senderEmail, receiverEmail } = req.body;
 
@@ -1793,6 +1859,35 @@ const updateItemStatusToOutOfOffice = async (req, res) => {
         }
       );
 
+      const [shipmentData] = await sequelize.query(
+        `SELECT logs FROM shipment_info WHERE trans_id = :trans_id`,
+        {
+          replacements: { trans_id },
+          transaction,
+        }
+      );
+
+      if (!shipmentData || shipmentData.length === 0) {
+        throw new Error("Shipment logs not found for provided trans_id.");
+      }
+
+      const currentLogs = JSON.parse(shipmentData[0].logs);
+      const moment_date = moment.tz("Africa/Lagos");
+      const currentTime = moment_date.format("YYYY-MM-DD HH:mm:ss");
+
+      currentLogs.out_of_office = currentTime;
+
+      await sequelize.query(
+        `UPDATE shipment_info SET logs = :logs WHERE trans_id = :trans_id`,
+        {
+          replacements: {
+            logs: JSON.stringify(currentLogs),
+            trans_id,
+          },
+          transaction,
+        }
+      );
+
       const [remainingItems] = await sequelize.query(
         `SELECT COUNT(*) as count
          FROM shipment_items 
@@ -1824,7 +1919,6 @@ const updateItemStatusToOutOfOffice = async (req, res) => {
         const { shipper_name, receiver_name } = shipmentInfo[0];
 
         // Send email notification
-
 
         const logoPath = path.join(__dirname, "logo.png");
 
@@ -1969,11 +2063,15 @@ const updateItemStatusToArrived = async (req, res) => {
   }
 
   try {
+    let originaltrans_id = String(item_trans_id)?.split("_")[0];
+
     // Fetch sender and receiver details from shipment_info table
-    const shipmentInfoQuery = `SELECT shipper_name, receiver_name FROM shipment_info WHERE shipper_email = :senderEmail AND receiver_email = :receiverEmail LIMIT 1`;
+    const shipmentInfoQuery = `SELECT shipper_name, receiver_name, trans_id FROM shipment_info WHERE trans_id = :originaltrans_id  LIMIT 1`;
     const [shipmentInfo] = await sequelize.query(shipmentInfoQuery, {
-      replacements: { senderEmail, receiverEmail },
+      replacements: { originaltrans_id },
     });
+
+    const trans_id = shipmentInfo[0]?.trans_id;
 
     if (!shipmentInfo || shipmentInfo.length === 0) {
       return res
@@ -2014,6 +2112,37 @@ const updateItemStatusToArrived = async (req, res) => {
          VALUES (:item_trans_id, :created_at)`,
         {
           replacements: { item_trans_id, created_at: currentDate },
+          transaction,
+        }
+      );
+
+      const [shipmentLogs] = await sequelize.query(
+        `SELECT logs FROM shipment_info WHERE trans_id = :trans_id`,
+        {
+          replacements: { trans_id },
+          transaction,
+        }
+      );
+
+      if (!shipmentLogs || shipmentLogs.length === 0) {
+        throw new Error("Shipment logs not found for provided trans_id.");
+      }
+
+      const currentLogs = JSON.parse(shipmentLogs[0].logs);
+      const moment_date = moment.tz("Africa/Lagos");
+      const currentTime = moment_date.format("YYYY-MM-DD HH:mm:ss");
+
+      // Update 'arrived' timestamp in logs
+
+      currentLogs.arrived = currentTime;
+
+      await sequelize.query(
+        `UPDATE shipment_info SET logs = :logs WHERE trans_id = :trans_id`,
+        {
+          replacements: {
+            logs: JSON.stringify(currentLogs),
+            trans_id,
+          },
           transaction,
         }
       );
@@ -2125,8 +2254,6 @@ const sendArrivalNotification = async (req, res) => {
 
     const isAllArrived = statusCount.arrived === items.length;
     const statusSummary = `${statusCount.arrived} Arrived, ${statusCount.outOfOffice} Not Arrived`;
-
-   
 
     const logoPath = path.join(__dirname, "logo.png");
 
@@ -2345,8 +2472,6 @@ const sendArrivalNotifications = async (req, res) => {
         }
       );
 
- 
-
       const logoPath = path.join(__dirname, "logo.png");
 
       const mailOptions = {
@@ -2498,6 +2623,9 @@ const updateItemStatusToDelivered = async (req, res) => {
   try {
     // Begin transaction
     const transaction = await sequelize.transaction();
+
+    let trans_id = String(item_trans_id)?.split("_")[0];
+
     try {
       const [itemDetails] = await sequelize.query(
         `SELECT si.trans_id, si.name, si.type, si.weight, si.tracking_number,
@@ -2546,11 +2674,39 @@ const updateItemStatusToDelivered = async (req, res) => {
         }
       );
 
-      // Commit transaction
+      const [shipmentLogs] = await sequelize.query(
+        `SELECT logs FROM shipment_info WHERE trans_id = :trans_id`,
+        {
+          replacements: { trans_id },
+          transaction,
+        }
+      );
+
+      if (!shipmentLogs || shipmentLogs.length === 0) {
+        throw new Error("Shipment logs not found for provided trans_id.");
+      }
+
+      const currentLogs = JSON.parse(shipmentLogs[0].logs);
+      const moment_date = moment.tz("Africa/Lagos");
+      const currentTime = moment_date.format("YYYY-MM-DD HH:mm:ss");
+
+      // Update 'delivered' timestamp in logs
+      currentLogs.delivered = currentTime;
+
+      await sequelize.query(
+        `UPDATE shipment_info SET logs = :logs WHERE trans_id = :trans_id`,
+        {
+          replacements: {
+            logs: JSON.stringify(currentLogs),
+            trans_id,
+          },
+          transaction,
+        }
+      );
+
       await transaction.commit();
 
       // Send email notifications
-  
 
       const logoPath = path.join(__dirname, "logo.png");
 
@@ -2713,6 +2869,35 @@ const updateItemTrackingAndStatus = async (req, res) => {
         }
       );
 
+      const [shipmentLogs] = await sequelize.query(
+        `SELECT logs FROM shipment_info WHERE trans_id = :trans_id`,
+        {
+          replacements: { trans_id },
+          transaction,
+        }
+      );
+
+      if (!shipmentLogs || shipmentLogs.length === 0) {
+        throw new Error("Shipment logs not found for provided trans_id.");
+      }
+
+      const currentLogs = JSON.parse(shipmentLogs[0].logs);
+      const moment_date = moment.tz("Africa/Lagos");
+      const currentTime = moment_date.format("YYYY-MM-DD HH:mm:ss");
+
+      currentLogs.in_transit = currentTime;
+
+      await sequelize.query(
+        `UPDATE shipment_info SET logs = :logs WHERE trans_id = :trans_id`,
+        {
+          replacements: {
+            logs: JSON.stringify(currentLogs),
+            trans_id,
+          },
+          transaction,
+        }
+      );
+
       // Check if all items for the trans_id have been updated
       const [remainingItems] = await sequelize.query(
         `SELECT COUNT(*) AS remaining_count 
@@ -2727,8 +2912,6 @@ const updateItemTrackingAndStatus = async (req, res) => {
       if (remainingItems[0].remaining_count === 0) {
         // Commit transaction
         await transaction.commit();
-
-    
 
         const logoPath = path.join(__dirname, "logo.png");
 
@@ -2874,6 +3057,37 @@ const updateMultipleItemsTrackingAndStatus = async (req, res) => {
         const { trans_id, tracking_number: fetchedTrackingNumber } =
           itemData[0];
 
+        const [shipmentLogs] = await sequelize.query(
+          `SELECT logs FROM shipment_info WHERE trans_id = :trans_id`,
+          {
+            replacements: { trans_id },
+            transaction,
+          }
+        );
+
+        if (!shipmentLogs || shipmentLogs.length === 0) {
+          throw new Error(`Shipment logs not found for trans_id: ${trans_id}`);
+        }
+
+        // 2. Parse, update in_transit time using moment
+        const currentLogs = JSON.parse(shipmentLogs[0].logs);
+        const moment_date = moment.tz("Africa/Lagos");
+        const currentTime = moment_date.format("YYYY-MM-DD HH:mm:ss");
+
+        currentLogs.in_transit = currentTime;
+
+        // 3. Save updated logs back to shipment_info
+        await sequelize.query(
+          `UPDATE shipment_info SET logs = :logs WHERE trans_id = :trans_id`,
+          {
+            replacements: {
+              logs: JSON.stringify(currentLogs),
+              trans_id,
+            },
+            transaction,
+          }
+        );
+
         // Group items by `trans_id` for sending consolidated email later
         if (!groupedItems[trans_id]) {
           groupedItems[trans_id] = {
@@ -2902,8 +3116,6 @@ const updateMultipleItemsTrackingAndStatus = async (req, res) => {
         );
 
         const { shipper_name, receiver_name } = shipmentData[0];
-
-      
 
         const logoPath = path.join(__dirname, "logo.png");
 
@@ -3049,7 +3261,6 @@ const getOutOfOffice = async (req, res) => {
           },
         }
       );
-      
 
       if (shipmentInfo.length === 0) {
         continue; // Skip if no shipment_info is found
@@ -3072,7 +3283,7 @@ const getOutOfOffice = async (req, res) => {
 
         transIdMap[transId] = {
           trans_id: transId,
-          created_at: item.created_at, 
+          created_at: item.created_at,
           shipment_info: shipmentInfo[0],
           items: items,
         };
@@ -3136,11 +3347,11 @@ const getItemsInTransit = async (req, res) => {
             },
           }
         );
-    
+
         if (!shipmentInfo.length) {
           return null; // No matching shipment_info with location — skip this
         }
-    
+
         const items = await sequelize.query(
           `SELECT trans_id, name, type, weight, status, item_trans_id 
            FROM shipment_items 
@@ -3150,7 +3361,7 @@ const getItemsInTransit = async (req, res) => {
             replacements: { trans_id: entry.trans_id },
           }
         );
-    
+
         return {
           trans_id: entry.trans_id,
           created_at: entry.created_at,
@@ -3159,14 +3370,13 @@ const getItemsInTransit = async (req, res) => {
         };
       })
     );
-    
+
     const filteredResults = results.filter((r) => r !== null);
-    
+
     res.status(200).json({
       message: "Items in transit retrieved successfully.",
       data: filteredResults,
     });
-    
   } catch (error) {
     console.error("Error fetching items in transit:", error);
     res.status(500).json({
@@ -3350,7 +3560,7 @@ const getDashboardData = async (req, res) => {
           replacements: { location: userLocation },
           type: sequelize.QueryTypes.SELECT,
         }
-      ),      
+      ),
       sequelize.query(
         `SELECT it.* 
          FROM items_intransit it
@@ -3362,7 +3572,7 @@ const getDashboardData = async (req, res) => {
           type: sequelize.QueryTypes.SELECT,
         }
       ),
-      
+
       sequelize.query(
         `SELECT si.trans_id, si.name, si.type, si.weight, si.status, si.item_trans_id, si.tracking_number 
          FROM shipment_items si
@@ -3996,8 +4206,6 @@ const sendTrackingNotification = async (req, res) => {
 
     const totalBill = parseFloat(postagebill) + parseFloat(customs_fee);
 
-
-
     const logoPath = path.join(__dirname, "logo.png");
 
     const mailOptions = {
@@ -4104,5 +4312,5 @@ module.exports = {
   verifyPayment,
   sendTrackingNotification,
   getMostRecentCounter,
-  getShipmentInfoForEdit
+  getShipmentInfoForEdit,
 };

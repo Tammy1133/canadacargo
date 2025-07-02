@@ -1,7 +1,6 @@
 require("dotenv").config(); // Load environment variables from the .env file
 
 module.exports = {
-
   development: {
     username: "root",
     password: "",

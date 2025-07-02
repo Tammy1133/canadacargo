@@ -563,10 +563,7 @@ function ScanningBarcode() {
                               </span>{" "}
                               {displayingShipmentInfo?.shipment_type || "N/A"}
                             </p>
-                            <p>
-                              <span className="font-semibold">Box Number:</span>{" "}
-                              {displayingShipmentInfo?.box_number || "N/A"}
-                            </p>
+
                             <p>
                               <span className="font-semibold">Courier:</span>{" "}
                               {displayingShipmentInfo?.courier || "N/A"}
@@ -616,7 +613,7 @@ function ScanningBarcode() {
                               Province
                             </h3>
                             <p className="mt-2 text-gray-600">
-                              {displayingShipperInfo?.province ||
+                              {displayingShipmentInfo?.province ||
                                 "No Province provided."}
                             </p>
                           </div>
@@ -636,7 +633,7 @@ function ScanningBarcode() {
                                     Item Name
                                   </th>
                                   <th className="py-2 px-4 border-b text-sm font-semibold text-gray-600">
-                                    Piece Type
+                                    Box Number
                                   </th>
                                   <th className="py-2 px-4 border-b text-sm font-semibold text-gray-600">
                                     Weight
@@ -657,7 +654,7 @@ function ScanningBarcode() {
                                         {eachItem?.name}
                                       </td>
                                       <td className="py-3 px-4 border-b text-sm text-gray-700">
-                                        {eachItem?.type}
+                                        {eachItem?.box_number}
                                       </td>
                                       <td className="py-3 px-4 border-b text-sm text-gray-700">
                                         {eachItem?.weight} Kg

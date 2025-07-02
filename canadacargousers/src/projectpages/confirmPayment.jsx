@@ -344,7 +344,7 @@ export const ConfirmPayment = () => {
                         type="text"
                         value={referenceNumber}
                         onChange={(e) => setReferenceNumber(e.target.value)}
-                        className="border border-gray-300 rounded px-2 py-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="border border-gray-300 rounded px-2 py-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 !bg-white !text-black"
                       />
                     </div>
 
@@ -356,7 +356,7 @@ export const ConfirmPayment = () => {
                         type="text"
                         value={phoneNo}
                         onChange={(e) => setPhoneNo(e.target.value)}
-                        className="border border-gray-300 rounded px-2 py-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="border border-gray-300 rounded px-2 py-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 !bg-white !text-black"
                       />
                     </div>
                     <button
