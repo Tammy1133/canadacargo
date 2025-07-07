@@ -164,7 +164,7 @@ const NewUser = () => {
           <div className="flex flex-col gap-9">
             <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
               <div className="border-b border-stroke py-4 px-5 dark:border-strokedark">
-                <h3 className="font-medium text-black dark:text-white">
+                <h3 className="font-medium !text-black dark:text-white">
                   Bio Data Form
                 </h3>
               </div>
@@ -173,7 +173,7 @@ const NewUser = () => {
                 <div className="p-5">
                   <div className="mb-4 flex flex-col gap-6 xl:flex-row">
                     <div className="w-full xl:w-1/2">
-                      <label className="mb-2.5 block text-black dark:text-white">
+                      <label className="mb-2.5 block !text-black dark:text-white">
                         First name
                       </label>
                       <input
@@ -181,12 +181,12 @@ const NewUser = () => {
                         value={firstName}
                         onChange={(e) => setFirstname(e.target.value)}
                         placeholder="Enter first name"
-                        className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                        className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 !text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                       />
                     </div>
 
                     <div className="w-full xl:w-1/2">
-                      <label className="mb-2.5 block text-black dark:text-white">
+                      <label className="mb-2.5 block !text-black dark:text-white">
                         Last name
                       </label>
                       <input
@@ -194,13 +194,13 @@ const NewUser = () => {
                         value={lastName}
                         onChange={(e) => setLastname(e.target.value)}
                         placeholder="Enter last name"
-                        className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                        className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 !text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                       />
                     </div>
                   </div>
 
                   <div className="mb-4">
-                    <label className="mb-2.5 block text-black dark:text-white">
+                    <label className="mb-2.5 block !text-black dark:text-white">
                       Email
                     </label>
                     <input
@@ -208,11 +208,11 @@ const NewUser = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Enter email"
-                      className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                      className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 !text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                     />
                   </div>
                   <div className="mb-4">
-                    <label className="mb-2.5 block text-black dark:text-white">
+                    <label className="mb-2.5 block !text-black dark:text-white">
                       Password
                     </label>
                     <input
@@ -220,7 +220,7 @@ const NewUser = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Enter password"
-                      className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                      className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 !text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                     />
                   </div>
 
@@ -246,7 +246,7 @@ const NewUser = () => {
           <div className="flex flex-col gap-9">
             <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
               <div className="border-b border-stroke py-4 px-7 dark:border-strokedark">
-                <h3 className="font-medium text-black dark:text-white">
+                <h3 className="font-medium !text-black dark:text-white">
                   User Modules
                 </h3>
               </div>
@@ -257,7 +257,7 @@ const NewUser = () => {
                     className="relative mb-5.5 block w-full cursor-pointer appearance-none rounded border border-dashed border-primary bg-gray py-4 px-4 dark:bg-meta-4 sm:py-7.5"
                   >
                     <div className="mb-4">
-                      <label className="mb-2.5 block font-medium text-black dark:text-white">
+                      <label className="mb-2.5 block font-medium !text-black dark:text-white">
                         What does the user have access to?
                       </label>
                       <div className="flex flex-col gap-3">

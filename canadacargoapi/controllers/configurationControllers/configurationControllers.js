@@ -200,34 +200,38 @@ const getAllShipmentType = async (req, res) => {
 
 const createPaymentMode = async (req, res) => {
   const { name } = req.body;
+  const location = req.user?.location;
 
-  if (!name) {
-    return res.status(400).json({ message: "Payment mode name is required" });
+  if (!name || !location) {
+    return res
+      .status(400)
+      .json({ message: "Payment mode name and user location are required" });
   }
 
   try {
-    // Insert the new payment mode into the database
     const paymentModeDate = new Date();
 
     if (isNaN(paymentModeDate.getTime())) {
       return res.status(400).json({ message: "Invalid date format" });
     }
 
-    const newPaymentMode = await sequelize.query(
-      "INSERT INTO conf_payment_modes (`name`, `date`) VALUES (:name, :date)",
+    await sequelize.query(
+      "INSERT INTO conf_payment_modes (`name`, `date`, `location`) VALUES (:name, :date, :location)",
       {
         replacements: {
           name,
           date: paymentModeDate,
+          location,
         },
       }
     );
 
     res.status(201).json({
-      message: "Payment Mode created successfully",
+      message: "Payment mode created successfully",
       paymentMode: {
         name,
         date: paymentModeDate,
+        location,
       },
     });
   } catch (error) {
@@ -241,28 +245,31 @@ const createPaymentMode = async (req, res) => {
 
 const deletePaymentMode = async (req, res) => {
   const { name } = req.body;
+  const location = req.user?.location;
 
-  if (!name) {
-    return res.status(400).json({ message: "Payment Mode is required" });
+  if (!name || !location) {
+    return res
+      .status(400)
+      .json({ message: "Payment mode name and user location are required" });
   }
 
   try {
     const paymentModeExists = await sequelize.query(
-      "SELECT `name` FROM `conf_payment_modes` WHERE `name` = :name",
+      "SELECT `name` FROM `conf_payment_modes` WHERE `name` = :name AND `location` = :location",
       {
         type: QueryTypes.SELECT,
-        replacements: { name },
+        replacements: { name, location },
       }
     );
 
     if (paymentModeExists.length === 0) {
-      return res.status(404).json({ message: "Payment Mode not found" });
+      return res.status(404).json({ message: "Payment mode not found" });
     }
 
     await sequelize.query(
-      "DELETE FROM `conf_payment_modes` WHERE `name` = :name",
+      "DELETE FROM `conf_payment_modes` WHERE `name` = :name AND `location` = :location",
       {
-        replacements: { name },
+        replacements: { name, location },
       }
     );
 
@@ -279,20 +286,29 @@ const deletePaymentMode = async (req, res) => {
 };
 
 const getAllPaymentModes = async (req, res) => {
+  const location = req.user?.location;
+
+  if (!location) {
+    return res.status(400).json({ message: "User location is required" });
+  }
+
   try {
     const paymentModes = await sequelize.query(
-      "SELECT * FROM conf_payment_modes",
+      "SELECT * FROM conf_payment_modes WHERE location = :location",
       {
         type: QueryTypes.SELECT,
+        replacements: { location },
       }
     );
 
     if (paymentModes.length === 0) {
-      return res.status(404).json({ message: "No Payment Modes found" });
+      return res
+        .status(404)
+        .json({ message: "No payment modes found for this location" });
     }
 
     res.status(200).json({
-      message: "Payment Modes fetched successfully",
+      message: "Payment modes fetched successfully",
       paymentModes,
     });
   } catch (error) {
@@ -515,12 +531,15 @@ const getAllDestinations = async (req, res) => {
 
 const createPieceType = async (req, res) => {
   const { name, price } = req.body;
+  const location = req.user?.location;
 
-  if (!name) {
-    return res.status(400).json({ message: "Piece type name is required" });
+  if (!name || !price || !location) {
+    return res
+      .status(400)
+      .json({ message: "Name, price, and user location are required" });
   }
 
-  if (!price || isNaN(price)) {
+  if (isNaN(price)) {
     return res.status(400).json({ message: "Valid price is required" });
   }
 
@@ -532,12 +551,13 @@ const createPieceType = async (req, res) => {
     }
 
     await sequelize.query(
-      "INSERT INTO conf_piece_type (`name`, `price`, `date`) VALUES (:name, :price, :date)",
+      "INSERT INTO conf_piece_type (`name`, `price`, `date`, `location`) VALUES (:name, :price, :date, :location)",
       {
         replacements: {
           name,
           price,
           date: pieceTypeDate,
+          location,
         },
       }
     );
@@ -548,6 +568,7 @@ const createPieceType = async (req, res) => {
         name,
         price,
         date: pieceTypeDate,
+        location,
       },
     });
   } catch (error) {
@@ -561,17 +582,20 @@ const createPieceType = async (req, res) => {
 
 const deletePieceType = async (req, res) => {
   const { name } = req.body;
+  const location = req.user?.location;
 
-  if (!name) {
-    return res.status(400).json({ message: "Piece type name is required" });
+  if (!name || !location) {
+    return res
+      .status(400)
+      .json({ message: "Piece type name and user location are required" });
   }
 
   try {
     const pieceTypeExists = await sequelize.query(
-      "SELECT `name` FROM `conf_piece_type` WHERE `name` = :name",
+      "SELECT `name` FROM `conf_piece_type` WHERE `name` = :name AND `location` = :location",
       {
         type: QueryTypes.SELECT,
-        replacements: { name },
+        replacements: { name, location },
       }
     );
 
@@ -580,9 +604,9 @@ const deletePieceType = async (req, res) => {
     }
 
     await sequelize.query(
-      "DELETE FROM `conf_piece_type` WHERE `name` = :name",
+      "DELETE FROM `conf_piece_type` WHERE `name` = :name AND `location` = :location",
       {
-        replacements: { name },
+        replacements: { name, location },
       }
     );
 
@@ -597,47 +621,88 @@ const deletePieceType = async (req, res) => {
     });
   }
 };
-const createExtraFee = async (req, res) => {
-  const { name, price } = req.body;
 
-  if (!name) {
-    return res.status(400).json({ message: "Extra fee name is required" });
+const getAllPieceTypes = async (req, res) => {
+  const location = req.user?.location;
+
+  if (!location) {
+    return res.status(400).json({ message: "User location is required" });
   }
 
-  if (!price || isNaN(price)) {
+  try {
+    const pieceTypes = await sequelize.query(
+      "SELECT `name`, `price`, `date`, `location` FROM `conf_piece_type` WHERE `location` = :location",
+      {
+        type: QueryTypes.SELECT,
+        replacements: { location },
+      }
+    );
+
+    if (pieceTypes.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No piece types found for this location" });
+    }
+
+    res.status(200).json({
+      message: "Piece types fetched successfully",
+      pieceTypes,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Failed to fetch piece types",
+      error: error.message,
+    });
+  }
+};
+
+const createExtraFee = async (req, res) => {
+  const { name, price } = req.body;
+  const location = req.user?.location;
+
+  if (!name || !price || !location) {
+    return res
+      .status(400)
+      .json({ message: "Name, price, and user location are required" });
+  }
+
+  if (isNaN(price)) {
     return res.status(400).json({ message: "Valid price is required" });
   }
 
   try {
-    const pieceTypeDate = new Date();
+    const feeDate = new Date();
 
-    if (isNaN(pieceTypeDate.getTime())) {
+    if (isNaN(feeDate.getTime())) {
       return res.status(400).json({ message: "Invalid date format" });
     }
 
     await sequelize.query(
-      "INSERT INTO conf_extrafees (`name`, `price`, `date`) VALUES (:name, :price, :date)",
+      "INSERT INTO conf_extrafees (`name`, `price`, `date`, `location`) VALUES (:name, :price, :date, :location)",
       {
         replacements: {
           name,
           price,
-          date: pieceTypeDate,
+          date: feeDate,
+          location,
         },
       }
     );
 
     res.status(201).json({
       message: "Fee created successfully",
-      pieceType: {
+      extraFee: {
         name,
         price,
-        date: pieceTypeDate,
+        date: feeDate,
+        location,
       },
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      message: "Failed to create piece type",
+      message: "Failed to create extra fee",
       error: error.message,
     });
   }
@@ -645,35 +710,76 @@ const createExtraFee = async (req, res) => {
 
 const deleteExtraFee = async (req, res) => {
   const { name } = req.body;
+  const location = req.user?.location;
 
-  if (!name) {
-    return res.status(400).json({ message: "Piece type name is required" });
+  if (!name || !location) {
+    return res
+      .status(400)
+      .json({ message: "Name and user location are required" });
   }
 
   try {
-    const pieceTypeExists = await sequelize.query(
-      "SELECT `name` FROM `conf_extrafees` WHERE `name` = :name",
+    const feeExists = await sequelize.query(
+      "SELECT `name` FROM `conf_extrafees` WHERE `name` = :name AND `location` = :location",
       {
         type: QueryTypes.SELECT,
-        replacements: { name },
+        replacements: { name, location },
       }
     );
 
-    if (pieceTypeExists.length === 0) {
-      return res.status(404).json({ message: "Piece type not found" });
+    if (feeExists.length === 0) {
+      return res.status(404).json({ message: "Extra fee not found" });
     }
 
-    await sequelize.query("DELETE FROM `conf_extrafees` WHERE `name` = :name", {
-      replacements: { name },
-    });
+    await sequelize.query(
+      "DELETE FROM `conf_extrafees` WHERE `name` = :name AND `location` = :location",
+      {
+        replacements: { name, location },
+      }
+    );
 
     res.status(200).json({
-      message: "Piece type deleted successfully",
+      message: "Extra fee deleted successfully",
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      message: "Failed to delete piece type",
+      message: "Failed to delete extra fee",
+      error: error.message,
+    });
+  }
+};
+
+const getAllExtraFees = async (req, res) => {
+  const location = req.user?.location;
+
+  if (!location) {
+    return res.status(400).json({ message: "User location is required" });
+  }
+
+  try {
+    const extraFees = await sequelize.query(
+      "SELECT `name`, `price`, `date`, `location` FROM `conf_extrafees` WHERE `location` = :location",
+      {
+        type: QueryTypes.SELECT,
+        replacements: { location },
+      }
+    );
+
+    if (extraFees.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No extra fees found for this location" });
+    }
+
+    res.status(200).json({
+      message: "Extra fees fetched successfully",
+      pieceTypes: extraFees,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Failed to fetch extra fees",
       error: error.message,
     });
   }
@@ -681,25 +787,33 @@ const deleteExtraFee = async (req, res) => {
 
 const getProductType = async (req, res) => {
   try {
-    // Query to fetch all entries from conf_location_delivery
+    const location = req.user?.location;
+
+    if (!location) {
+      return res.status(400).json({ message: "User location is required" });
+    }
+
     const [results] = await sequelize.query(
-      "SELECT `name`, `price`, `date` FROM `conf_product_type` WHERE 1"
+      "SELECT `name`, `price`, `date`, `location` FROM `conf_product_type` WHERE `location` = :location",
+      {
+        replacements: { location },
+      }
     );
 
     if (results.length === 0) {
       return res
         .status(404)
-        .json({ message: "No location delivery data found" });
+        .json({ message: "No product types found for this location" });
     }
 
     res.status(200).json({
-      message: "Location delivery data retrieved successfully",
+      message: "Product types retrieved successfully",
       data: results,
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      message: "Failed to retrieve location delivery data",
+      message: "Failed to retrieve product types",
       error: error.message,
     });
   }
@@ -707,20 +821,159 @@ const getProductType = async (req, res) => {
 
 const deleteProductType = async (req, res) => {
   const { name } = req.body;
+  const location = req.user?.location;
 
-  if (!name) {
-    return res
-      .status(400)
-      .json({ message: "Location delivery name is required" });
+  if (!name || !location) {
+    return res.status(400).json({
+      message: "Both name and user location are required",
+    });
   }
 
   try {
-    // Check if the location delivery exists
-    const locationExists = await sequelize.query(
-      "SELECT `name`, `price`, `date` FROM `conf_product_type` WHERE `name` = :name",
+    const productExists = await sequelize.query(
+      "SELECT `name`, `price`, `date`, `location` FROM `conf_product_type` WHERE `name` = :name AND `location` = :location",
       {
         type: QueryTypes.SELECT,
-        replacements: { name },
+        replacements: { name, location },
+      }
+    );
+
+    if (productExists.length === 0) {
+      return res.status(404).json({ message: "Product type not found" });
+    }
+
+    await sequelize.query(
+      "DELETE FROM `conf_product_type` WHERE `name` = :name AND `location` = :location",
+      {
+        replacements: { name, location },
+      }
+    );
+
+    res.status(200).json({
+      message: "Product type deleted successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Failed to delete product type",
+      error: error.message,
+    });
+  }
+};
+const createProductType = async (req, res) => {
+  const { name, price } = req.body;
+  const location = req.user?.location;
+
+  if (!name || !price || !location) {
+    return res.status(400).json({
+      message: "Name, price, and user location are required",
+    });
+  }
+
+  if (isNaN(price)) {
+    return res.status(400).json({ message: "Valid price is required" });
+  }
+
+  try {
+    const deliveryDate = new Date();
+
+    await sequelize.query(
+      "INSERT INTO conf_product_type (`name`, `price`, `date`, `location`) VALUES (:name, :price, :date, :location)",
+      {
+        replacements: {
+          name,
+          price,
+          date: deliveryDate,
+          location,
+        },
+      }
+    );
+
+    res.status(201).json({
+      message: "Product type created successfully",
+      productType: {
+        name,
+        price,
+        date: deliveryDate,
+        location,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Failed to create product type",
+      error: error.message,
+    });
+  }
+};
+
+const createLocationDelivery = async (req, res) => {
+  const { name, price } = req.body;
+  const location = req.user?.location;
+
+  if (!name || !price || !location) {
+    return res
+      .status(400)
+      .json({ message: "Name, price, and user location are required" });
+  }
+
+  if (isNaN(price)) {
+    return res.status(400).json({ message: "Valid price is required" });
+  }
+
+  try {
+    const deliveryDate = new Date();
+
+    if (isNaN(deliveryDate.getTime())) {
+      return res.status(400).json({ message: "Invalid date format" });
+    }
+
+    await sequelize.query(
+      "INSERT INTO conf_location_delivery (`name`, `price`, `date`, `location`) VALUES (:name, :price, :date, :location)",
+      {
+        replacements: {
+          name,
+          price,
+          date: deliveryDate,
+          location,
+        },
+      }
+    );
+
+    res.status(201).json({
+      message: "Location delivery created successfully",
+      locationDelivery: {
+        name,
+        price,
+        date: deliveryDate,
+        location,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Failed to create location delivery",
+      error: error.message,
+    });
+  }
+};
+
+const deleteLocationDelivery = async (req, res) => {
+  const { name } = req.body;
+  const location = req.user?.location;
+
+  if (!name || !location) {
+    return res
+      .status(400)
+      .json({ message: "Name and user location are required" });
+  }
+
+  try {
+    const locationExists = await sequelize.query(
+      "SELECT `name` FROM `conf_location_delivery` WHERE `name` = :name AND `location` = :location",
+      {
+        type: QueryTypes.SELECT,
+        replacements: { name, location },
       }
     );
 
@@ -728,11 +981,10 @@ const deleteProductType = async (req, res) => {
       return res.status(404).json({ message: "Location delivery not found" });
     }
 
-    // Delete the location delivery
     await sequelize.query(
-      "DELETE FROM `conf_product_type` WHERE `name` = :name",
+      "DELETE FROM `conf_location_delivery` WHERE `name` = :name AND `location` = :location",
       {
-        replacements: { name },
+        replacements: { name, location },
       }
     );
 
@@ -748,69 +1000,26 @@ const deleteProductType = async (req, res) => {
   }
 };
 
-const createProductType = async (req, res) => {
-  const { name, price } = req.body;
-
-  // Validate input
-  if (!name) {
-    return res
-      .status(400)
-      .json({ message: "Location delivery name is required" });
-  }
-
-  if (!price || isNaN(price)) {
-    return res.status(400).json({ message: "Valid price is required" });
-  }
-
-  try {
-    // Get the current date for the `date` field
-    const deliveryDate = new Date();
-
-    if (isNaN(deliveryDate.getTime())) {
-      return res.status(400).json({ message: "Invalid date format" });
-    }
-
-    // Insert into the `conf_location_delivery` table
-    await sequelize.query(
-      "INSERT INTO conf_product_type (`name`, `price`, `date`) VALUES (:name, :price, :date)",
-      {
-        replacements: {
-          name,
-          price,
-          date: deliveryDate,
-        },
-      }
-    );
-
-    // Return success response
-    res.status(201).json({
-      message: "Location delivery created successfully",
-      locationDelivery: {
-        name,
-        price,
-        date: deliveryDate,
-      },
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      message: "Failed to create location delivery",
-      error: error.message,
-    });
-  }
-};
-
 const getLocationDelivery = async (req, res) => {
+  const location = req.user?.location;
+
+  if (!location) {
+    return res.status(400).json({ message: "User location is required" });
+  }
+
   try {
-    // Query to fetch all entries from conf_location_delivery
-    const [results] = await sequelize.query(
-      "SELECT `name`, `price`, `date` FROM `conf_location_delivery` WHERE 1"
+    const results = await sequelize.query(
+      "SELECT `name`, `price`, `date`, `location` FROM `conf_location_delivery` WHERE `location` = :location",
+      {
+        type: QueryTypes.SELECT,
+        replacements: { location },
+      }
     );
 
     if (results.length === 0) {
       return res
         .status(404)
-        .json({ message: "No location delivery data found" });
+        .json({ message: "No location delivery data found for this location" });
     }
 
     res.status(200).json({
@@ -821,152 +1030,6 @@ const getLocationDelivery = async (req, res) => {
     console.error(error);
     res.status(500).json({
       message: "Failed to retrieve location delivery data",
-      error: error.message,
-    });
-  }
-};
-
-const deleteLocationDelivery = async (req, res) => {
-  const { name } = req.body;
-
-  if (!name) {
-    return res
-      .status(400)
-      .json({ message: "Location delivery name is required" });
-  }
-
-  try {
-    // Check if the location delivery exists
-    const locationExists = await sequelize.query(
-      "SELECT `name`, `price`, `date` FROM `conf_location_delivery` WHERE `name` = :name",
-      {
-        type: QueryTypes.SELECT,
-        replacements: { name },
-      }
-    );
-
-    if (locationExists.length === 0) {
-      return res.status(404).json({ message: "Location delivery not found" });
-    }
-
-    // Delete the location delivery
-    await sequelize.query(
-      "DELETE FROM `conf_location_delivery` WHERE `name` = :name",
-      {
-        replacements: { name },
-      }
-    );
-
-    res.status(200).json({
-      message: "Location delivery deleted successfully",
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      message: "Failed to delete location delivery",
-      error: error.message,
-    });
-  }
-};
-
-const createLocationDelivery = async (req, res) => {
-  const { name, price } = req.body;
-
-  // Validate input
-  if (!name) {
-    return res
-      .status(400)
-      .json({ message: "Location delivery name is required" });
-  }
-
-  if (!price || isNaN(price)) {
-    return res.status(400).json({ message: "Valid price is required" });
-  }
-
-  try {
-    // Get the current date for the `date` field
-    const deliveryDate = new Date();
-
-    if (isNaN(deliveryDate.getTime())) {
-      return res.status(400).json({ message: "Invalid date format" });
-    }
-
-    // Insert into the `conf_location_delivery` table
-    await sequelize.query(
-      "INSERT INTO conf_location_delivery (`name`, `price`, `date`) VALUES (:name, :price, :date)",
-      {
-        replacements: {
-          name,
-          price,
-          date: deliveryDate,
-        },
-      }
-    );
-
-    // Return success response
-    res.status(201).json({
-      message: "Location delivery created successfully",
-      locationDelivery: {
-        name,
-        price,
-        date: deliveryDate,
-      },
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      message: "Failed to create location delivery",
-      error: error.message,
-    });
-  }
-};
-
-const getAllPieceTypes = async (req, res) => {
-  try {
-    const pieceTypes = await sequelize.query(
-      "SELECT `name`, `price`, `date` FROM `conf_piece_type` WHERE 1",
-      {
-        type: QueryTypes.SELECT,
-      }
-    );
-
-    if (pieceTypes.length === 0) {
-      return res.status(404).json({ message: "No piece types found" });
-    }
-
-    res.status(200).json({
-      message: "Piece types fetched successfully",
-      pieceTypes,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      message: "Failed to fetch piece types",
-      error: error.message,
-    });
-  }
-};
-const getAllExtraFees = async (req, res) => {
-  try {
-    const pieceTypes = await sequelize.query(
-      "SELECT `name`, `price`, `date` FROM `conf_extrafees` WHERE 1",
-      {
-        type: QueryTypes.SELECT,
-      }
-    );
-
-    if (pieceTypes.length === 0) {
-      return res.status(404).json({ message: "No piece types found" });
-    }
-
-    res.status(200).json({
-      message: "Piece types fetched successfully",
-      pieceTypes,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      message: "Failed to fetch piece types",
       error: error.message,
     });
   }

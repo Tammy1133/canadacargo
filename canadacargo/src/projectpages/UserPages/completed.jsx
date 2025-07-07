@@ -202,7 +202,7 @@ function Completed() {
                   Address
                 </th>
                 <th className="!font-bold !text-center">Tracking ID</th>
-                <th className="!font-bold !text-center">Number of cartons</th>
+                <th className="!font-bold !text-center">No of cartons</th>
 
                 <th className="!font-bold !text-center">Action</th>
               </tr>

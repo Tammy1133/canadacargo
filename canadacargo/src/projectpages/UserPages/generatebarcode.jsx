@@ -218,7 +218,7 @@ function GenerateBarcode() {
                     Address
                   </th>
                   <th className="!font-bold !text-center">Email</th>
-                  <th className="!font-bold !text-center">Number of cartons</th>
+                  <th className="!font-bold !text-center">No of cartons</th>
                   <th className="!font-bold !text-center">Status</th>
 
                   <th className="!font-bold !text-center">Action</th>

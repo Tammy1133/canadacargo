@@ -13,6 +13,7 @@ import {
 import axios from "axios";
 import { getUserDetails } from "../../projectcomponents/auth";
 import { useNavigate } from "react-router-dom";
+import { IsCanada } from "../../utils/globalConstantUtil";
 
 function AllShipmentsEdit() {
   const [trans, setTrans] = useState([]);
@@ -116,13 +117,13 @@ function AllShipmentsEdit() {
             <td style="border: 1px solid #ddd; padding: 8px;">${Number(
               calculations?.totalWeight
             )?.toLocaleString()}</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
-              calculations?.shippingRate
-            )?.toLocaleString()}</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
+            <td style="border: 1px solid #ddd; padding: 8px;">${
+              IsCanada ? "$" : "₦"
+            } ${Number(calculations?.shippingRate)?.toLocaleString()}</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">${IsCanada ? "$" : "₦"} ${Number(
               calculations?.itemFee
             )?.toLocaleString()}</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
+            <td style="border: 1px solid #ddd; padding: 8px;">${IsCanada ? "$" : "₦"} ${Number(
               calculations?.totalSum
             )?.toLocaleString()}</td>
           </tr>`

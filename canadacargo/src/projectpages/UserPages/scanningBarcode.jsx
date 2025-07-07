@@ -84,6 +84,8 @@ function ScanningBarcode() {
           title: "Shipment Info Retrieved",
           text: "Shipment details have been successfully retrieved.",
         });
+
+        setManualBarcode("");
       } else {
         Swal.fire({
           icon: "warning",
@@ -312,7 +314,7 @@ function ScanningBarcode() {
     userToken && (
       <>
         <TitleCard
-          title="Proceed to scan Barcode"
+          title="Proceed to scan Code"
           topMargin="mt-2"
           TopSideButtons={<div className={"inline-block "}></div>}
         >

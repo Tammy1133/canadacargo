@@ -31,6 +31,7 @@ import BarcodeComponent from "../UserComponents/barcodeComponent";
 import QRCode from "react-qr-code";
 import Barcode from "react-barcode";
 import DynamicBarcodeToImage from "../UserComponents/barcodeGenerator";
+import { IsCanada } from "../../utils/globalConstantUtil";
 
 function ArrivalResponse() {
   const [trans, setTrans] = useState([]);
@@ -101,8 +102,6 @@ function ArrivalResponse() {
       )
     );
 
-
-
     setTrans(filteredTrans);
   };
 
@@ -153,16 +152,18 @@ function ArrivalResponse() {
             <td style="border: 1px solid #ddd; padding: 8px;">${Number(
               calculations?.totalWeight
             )?.toLocaleString()}</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
-              calculations?.shippingRate
-            )?.toLocaleString()}</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
-              calculations?.itemFee
-            )?.toLocaleString()}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
-            pickup_fee
-          )?.toLocaleString()}</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
+            <td style="border: 1px solid #ddd; padding: 8px;">${
+              IsCanada ? "$" : "₦"
+            } ${Number(calculations?.shippingRate)?.toLocaleString()}</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">${
+              IsCanada ? "$" : "₦"
+            } ${Number(calculations?.itemFee)?.toLocaleString()}</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">${
+            IsCanada ? "$" : "₦"
+          } ${Number(pickup_fee)?.toLocaleString()}</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">${
+              IsCanada ? "$" : "₦"
+            } ${Number(
               calculations?.totalSum + Number(pickup_fee)
             )?.toLocaleString()}</td>
           </tr>`
@@ -448,19 +449,17 @@ function ArrivalResponse() {
 
   useEffect(() => {
     let startDate, endDate;
-
-    if (selectedDate && !selectedEndDate) {
+    if (selectedDate) {
       startDate = new Date(selectedDate);
-      startDate.setHours(0, 0, 0, 0);
-      endDate = new Date();
-    }
+      startDate.setHours(0, 0, 0, 0); // beginning of selectedDate
 
-    if (selectedDate && selectedEndDate) {
-      startDate = new Date(selectedDate);
-      endDate = new Date(selectedEndDate);
-    }
-
-    if (!selectedDate) {
+      if (selectedEndDate) {
+        endDate = new Date(selectedEndDate);
+        endDate.setHours(23, 59, 59, 999);
+      } else {
+        endDate = new Date(); // default to now
+      }
+    } else {
       startDate = new Date();
       startDate.setDate(startDate.getDate() - 1);
       startDate.setHours(0, 0, 0, 0);

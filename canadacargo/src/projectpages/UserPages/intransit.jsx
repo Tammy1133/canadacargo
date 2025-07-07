@@ -16,6 +16,7 @@ import {
 } from "@heroicons/react/24/outline";
 import axios from "axios";
 import { getUserDetails } from "../../projectcomponents/auth";
+import { getBoxNumbersFromItems } from "../../utils/globalConstantUtil";
 
 function InTransit() {
   const s = [];
@@ -40,6 +41,63 @@ function InTransit() {
   const [sendloading, setsendloading] = useState(false);
 
   const [originalTrans, setOriginalTrans] = useState([]);
+
+  const [allOrigins, setAllOrigins] = useState([]);
+  const [allDestinations, setAllDestinations] = useState([]);
+  const [selectedOrigin, setSelectedOrigin] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedEndDate, setSelectedEndDate] = useState("");
+  const [selectedDestination, setSelectedDestination] = useState("");
+  const getAllOrigins = async () => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/getAllOrigins`,
+        {
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setAllOrigins(response.data.origins || []);
+    } catch (error) {
+      console.error(
+        "Error fetching origins:",
+        error.response?.data || error.message
+      );
+      setAllOrigins([]);
+    }
+  };
+
+  const getAllDestinations = async () => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/getAllDestinations`,
+        {
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setAllDestinations(response.data.destinations || []);
+    } catch (error) {
+      console.error(
+        "Error fetching destinations:",
+        error.response?.data || error.message
+      );
+      setAllDestinations([]);
+    }
+  };
+
+  useEffect(() => {
+    setsendloading(true);
+    const fetchData = async () => {
+      await Promise.all([getAllOrigins(), getAllDestinations()]);
+    };
+    fetchData();
+    setsendloading(false);
+  }, []);
 
   const viewBarcodeInfo = (id) => {
     setSelectedId(id);
@@ -67,20 +125,27 @@ function InTransit() {
 
   const getOutOfOffice = async () => {
     try {
+      const currentDate = new Date().toISOString().split("T")[0];
+      const formattedStartDate = selectedDate || currentDate;
+      const formattedEndDate = selectedEndDate || currentDate;
       setsendloading(true);
       const response = await axios.get(
         `${import.meta.env.VITE_API_URL}/getItemsInTransit`,
         {
+          params: {
+            startdate: formattedStartDate,
+            enddate: formattedEndDate,
+            origin: selectedOrigin,
+            destination: selectedDestination,
+          },
           headers: {
             Authorization: `Bearer ${userToken}`,
             "Content-Type": "application/json",
           },
         }
       );
-      // console.log(response.data.data);
 
       setTrans(response.data.data);
-
       setsendloading(false);
     } catch (error) {
       setsendloading(false);
@@ -93,8 +158,10 @@ function InTransit() {
   };
 
   useEffect(() => {
-    getOutOfOffice();
-  }, []);
+    if (selectedOrigin) {
+      getOutOfOffice();
+    }
+  }, [selectedOrigin, selectedDestination, selectedDate, selectedEndDate]);
 
   useEffect(() => {
     if (originalTrans.length === 0 && trans.length > 0) {
@@ -105,6 +172,85 @@ function InTransit() {
   return (
     userToken && (
       <>
+        <div className=" mx-auto p-6 bg-white shadow-md rounded-xl ">
+          <h2 className="text-lg font-semibold mb-4">Select Locations</h2>
+
+          <div className="flex space-x-4">
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Origin
+              </label>
+              <select
+                value={selectedOrigin}
+                onChange={(e) => setSelectedOrigin(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">-- Select Origin --</option>
+                {allOrigins.map((origin, index) => (
+                  <option key={index} value={origin.name}>
+                    {origin.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Destination
+              </label>
+              <select
+                value={selectedDestination}
+                onChange={(e) => setSelectedDestination(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">-- Select Destination --</option>
+                {allDestinations.map((destination, index) => (
+                  <option key={index} value={destination.name}>
+                    {destination.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center  bg-white shadow-md rounded-lg px-6  pb-2 -mt-4 mb-5 space-y-4 sm:space-y-0 sm:space-x-4">
+          <div className="flex flex-col">
+            <label
+              htmlFor="startDate"
+              className="text-sm font-semibold text-gray-700"
+            >
+              Select Start Date
+            </label>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => {
+                setSelectedDate(e.target.value);
+              }}
+              id="date"
+              className="mt-1 border rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            />
+          </div>
+          <div className="flex flex-col">
+            <label
+              htmlFor="startDate"
+              className="text-sm font-semibold text-gray-700"
+            >
+              Select End Date
+            </label>
+            <input
+              type="date"
+              value={selectedEndDate}
+              onChange={(e) => {
+                setSelectedEndDate(e.target.value);
+              }}
+              id="date"
+              className="mt-1 border rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            />
+          </div>
+        </div>
+
         <TitleCard
           title="Items in transit"
           topMargin="mt-2"
@@ -129,13 +275,14 @@ function InTransit() {
             <table className="table w-full">
               <thead>
                 <tr>
+                  <th className="!font-bold !text-center">Date</th>
+                  <th className="!font-bold !text-center">Boxes</th>
+                  <th className="!font-bold !text-center">No of cartons</th>
                   <th className="!font-bold !text-center">Shipper Name</th>
                   <th className="!font-bold !text-center">Phone Number</th>
                   <th className="!font-bold !text-center min-w-[170px]">
                     Address
                   </th>
-                  <th className="!font-bold !text-center">Tracking ID</th>
-                  <th className="!font-bold !text-center">Number of cartons</th>
 
                   <th className="!font-bold !text-center">Action</th>
                 </tr>
@@ -145,6 +292,14 @@ function InTransit() {
                   return (
                     <tr key={k}>
                       <td className="truncate">
+                        {new Date(l?.created_at)?.toLocaleDateString() || "-"}
+                      </td>
+
+                      <td className="">{getBoxNumbersFromItems(l?.items)}</td>
+                      <td className="truncate">
+                        {l.items === "[]" ? 0 : l?.items?.length}
+                      </td>
+                      <td className="truncate">
                         {l.shipment_info?.shipper_name}
                       </td>
                       <td className="truncate">
@@ -153,20 +308,7 @@ function InTransit() {
                       <td className="truncate max-w-[200px]">
                         {l.shipment_info?.receiver_address}
                       </td>
-                      <td className="truncate">{l?.items?.length}</td>
-                      <td className="truncate">
-                        {Object.entries(
-                          l?.items?.reduce((acc, item) => {
-                            acc[item.status] = (acc[item.status] || 0) + 1;
-                            return acc;
-                          }, {}) || []
-                        ).map(([status, count], index) => (
-                          <span key={index}>
-                            {count} {status}
-                            {index < l.items.length - 1 && ", "}
-                          </span>
-                        ))}
-                      </td>
+
                       <td>
                         <div className="flex space-x-2">
                           <button

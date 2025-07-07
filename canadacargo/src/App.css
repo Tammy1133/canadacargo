@@ -111,3 +111,131 @@ td {
   background-color: rgba(0, 0, 0, 0.823);
   background-blend-mode: darken;
 }
+
+/* Custom styles for react-select-search with !important */
+
+.select-search-input::placeholder {
+  color: black !important;
+}
+
+.react-select-search-input.react-select-search-input::placeholder {
+  color: black !important;
+}
+
+.react-select-search-input.react-select-search-input:focus::placeholder {
+  color: black !important;
+}
+.select-search-input {
+  background-color: rgba(128, 128, 128, 0.495) !important;
+  border: 1.5px solid #ccc !important;
+  border-radius: 6px !important;
+  padding: 8px 12px !important;
+  transition: border-color 0.3s ease !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+.select-search-input::placeholder {
+  color: black !important;
+}
+
+.select-search-input:focus::placeholder {
+  color: black !important;
+}
+
+input {
+  background-color: #ffffff !important; /* White background for all states */
+  color: black !important;
+}
+
+input:hover,
+input:focus,
+input:active,
+input:focus-visible,
+input:focus-within {
+  background-color: #ffffff !important; /* Ensure white background on hover, focus, active */
+  color: black !important;
+}
+
+input {
+  background-color: #ffffff !important; /* Force white background */
+  color: #000000 !important; /* Black text for readability */
+}
+
+input:hover,
+input:focus,
+input:active,
+input:focus-visible,
+input:focus-within {
+  background-color: #ffffff !important; /* White background on all states */
+  color: #000000 !important; /* Black text for readability */
+}
+
+/* Ensure no dark mode override affects inputs */
+@media (prefers-color-scheme: dark) {
+  input {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  input:hover,
+  input:focus,
+  input:active,
+  input:focus-visible,
+  input:focus-within {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+}
+
+input {
+  background-color: #ffffff !important; /* Force white background */
+  color: #000000 !important; /* Black text for readability */
+}
+
+/* Target autofill styles for WebKit browsers (Chrome, Safari, Edge) */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important; /* Force white background */
+  -webkit-text-fill-color: #000000 !important; /* Force black text */
+  background-color: #ffffff !important; /* Additional fallback */
+  color: #000000 !important; /* Additional fallback */
+}
+
+/* Cover other input states */
+input:hover,
+input:focus,
+input:active,
+input:focus-visible,
+input:focus-within {
+  background-color: #ffffff !important; /* White background on all states */
+  color: #000000 !important; /* Black text for readability */
+}
+
+/* Ensure no dark mode override affects inputs */
+@media (prefers-color-scheme: dark) {
+  input {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+    -webkit-text-fill-color: #000000 !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  input:hover,
+  input:focus,
+  input:active,
+  input:focus-visible,
+  input:focus-within {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+}

@@ -129,7 +129,7 @@ export const TrackShipment = () => {
                     setTrackingNumber(e.target.value);
                   }}
                   placeholder="Enter your tracking number"
-                  className="w-full mt-1 px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full mt-1 px-4 py-2 text-gray-700 !bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
               <div>
@@ -147,7 +147,7 @@ export const TrackShipment = () => {
                     setEmail(e.target.value);
                   }}
                   placeholder="Enter your email"
-                  className="w-full mt-1 px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full mt-1 px-4 py-2 text-gray-700 !bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
               <button
@@ -218,9 +218,59 @@ export const TrackShipment = () => {
 
               <div className="mt-6">
                 {activeTab === "shipmentDetails" && (
-                  <div>
+                  <div className="mt-6 space-y-6">
+                    {/* Shipper Information */}
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-700">
+                        Shipper Information
+                      </h3>
+                      <div className="mt-2 text-gray-600 space-y-2">
+                        <p>
+                          <span className="font-semibold">Name:</span>{" "}
+                          {shipmentInfo?.shipper_name || "N/A"}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Phone:</span>{" "}
+                          {shipmentInfo?.shipper_phone || "N/A"}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Address:</span>{" "}
+                          {shipmentInfo?.shipper_address || "N/A"}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Email:</span>{" "}
+                          {shipmentInfo?.shipper_email || "N/A"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Receiver Information */}
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-700">
+                        Receiver Information
+                      </h3>
+                      <div className="mt-2 text-gray-600 space-y-2">
+                        <p>
+                          <span className="font-semibold">Name:</span>{" "}
+                          {shipmentInfo?.receiver_name || "N/A"}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Phone:</span>{" "}
+                          {shipmentInfo?.receiver_phone || "N/A"}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Address:</span>{" "}
+                          {shipmentInfo?.receiver_address || "N/A"}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Email:</span>{" "}
+                          {shipmentInfo?.receiver_email || "N/A"}
+                        </p>
+                      </div>
+                    </div>
+
                     <h3 className="text-lg font-semibold text-gray-700">
-                      Shipment Details
+                      Other Information
                     </h3>
                     <div className="mt-2 text-gray-600 space-y-2">
                       <p>

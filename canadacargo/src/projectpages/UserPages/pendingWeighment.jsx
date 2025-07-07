@@ -12,6 +12,7 @@ import {
 import { getUserDetails } from "../../projectcomponents/auth";
 import axios from "axios";
 import Select from "react-select";
+import { IsCanada } from "../../utils/globalConstantUtil";
 
 function PendingWeighments() {
   const [trans, setTrans] = useState([]);
@@ -296,7 +297,9 @@ function PendingWeighments() {
                     ${item?.value}
                   </td>
                   <td style="border: 1px solid #ddd; padding: 8px;">
-                    ₦ ${Number(item?.price)?.toLocaleString()}
+                    ${IsCanada ? "$" : "₦"} ${Number(
+                    item?.price
+                  )?.toLocaleString()}
                   </td>
                   <td style="border: 1px solid #ddd; padding: 8px;">
                     ${shipmentfeequantities[item?.value] || 1}
@@ -307,12 +310,12 @@ function PendingWeighments() {
             </tbody>
           </table>
           <br>
-          <h3> Total Extra Fee: ₦ ${shipmentfees
-            .reduce((total, fee) => {
-              const qty = shipmentfeequantities[fee.value] || 1;
-              return total + qty * fee.price;
-            }, 0)
-            .toFixed(2)} </h3>`
+          <h3> Total Extra Fee: ${IsCanada ? "$" : "₦"} ${shipmentfees
+              .reduce((total, fee) => {
+                const qty = shipmentfeequantities[fee.value] || 1;
+                return total + qty * fee.price;
+              }, 0)
+              .toFixed(2)} </h3>`
           : `<h6>No Extra Fee Added </h6>`
       }
        
@@ -356,7 +359,7 @@ function PendingWeighments() {
   const [extraFees, setExtraFees] = useState([]);
 
   const feeOptions = extraFees.map((fee) => ({
-    label: `${fee.name} (₦ ${fee.price})`,
+    label: `${fee.name} (${IsCanada ? "$" : "₦"} ${fee.price})`,
     value: fee.name,
     price: parseFloat(fee.price),
     quantity: 1,
@@ -668,7 +671,7 @@ function PendingWeighments() {
                     Address
                   </th>
                   <th className="!font-bold !text-center">Email</th>
-                  <th className="!font-bold !text-center">Number of cartons</th>
+                  <th className="!font-bold !text-center">No of cartons</th>
 
                   <th className="!font-bold !text-center">Action</th>
                 </tr>

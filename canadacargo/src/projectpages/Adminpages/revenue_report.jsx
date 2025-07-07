@@ -15,6 +15,7 @@ import { getUserDetails } from "../../projectcomponents/auth";
 import axios from "axios";
 import CompletedPayments from "../UserPages/completedPayments";
 import CompletedPaymentsTable from "../UserPages/completedPaymentsTable";
+import { IsCanada } from "../../utils/globalConstantUtil";
 
 function RevenueReport() {
   const dispatch = useDispatch();
@@ -41,13 +42,17 @@ function RevenueReport() {
     },
     {
       title: "Revenue this month",
-      value: `₦ ${Number(pageStats?.monthlyRevenue)?.toLocaleString()}`,
+      value: `${IsCanada ? "$" : "₦"} ${Number(
+        pageStats?.monthlyRevenue
+      )?.toLocaleString()}`,
       icon: <BoltIcon className="w-8 h-8" />,
       description: "↗︎ 45 vs yesterday",
     },
     {
       title: "Revenue this year",
-      value: `₦ ${Number(pageStats?.yearlyRevenue)?.toLocaleString()}`,
+      value: `${IsCanada ? "$" : "₦"} ${Number(
+        pageStats?.yearlyRevenue
+      )?.toLocaleString()}`,
       icon: <CreditCardIcon className="w-8 h-8" />,
       description: "↗︎ 42 (25%)",
     },

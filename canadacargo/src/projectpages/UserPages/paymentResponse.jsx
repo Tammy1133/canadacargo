@@ -30,6 +30,7 @@ import BarcodeComponent from "../UserComponents/barcodeComponent";
 import QRCode from "react-qr-code";
 import Barcode from "react-barcode";
 import DynamicBarcodeToImage from "../UserComponents/barcodeGenerator";
+import { IsCanada } from "../../utils/globalConstantUtil";
 
 function PaymentResponse() {
   const [trans, setTrans] = useState([]);
@@ -135,16 +136,18 @@ function PaymentResponse() {
             <td style="border: 1px solid #ddd; padding: 8px;">${Number(
               calculations?.totalWeight
             )?.toLocaleString()}</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
-              calculations?.shippingRate
-            )?.toLocaleString()}</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
-              calculations?.itemFee
-            )?.toLocaleString()}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
-            pickup_fee
-          )?.toLocaleString()}</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
+            <td style="border: 1px solid #ddd; padding: 8px;">${
+              IsCanada ? "$" : "₦"
+            } ${Number(calculations?.shippingRate)?.toLocaleString()}</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">${
+              IsCanada ? "$" : "₦"
+            } ${Number(calculations?.itemFee)?.toLocaleString()}</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">${
+            IsCanada ? "$" : "₦"
+          } ${Number(pickup_fee)?.toLocaleString()}</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">${
+              IsCanada ? "$" : "₦"
+            } ${Number(
               calculations?.totalSum + Number(pickup_fee)
             )?.toLocaleString()}</td>
           </tr>`
@@ -512,26 +515,25 @@ function PaymentResponse() {
     let startDate, endDate;
 
     if (selectedDate && !selectedEndDate) {
-      // If only selectedDate is provided, fetch from 00:00:00 of selectedDate to NOW
       startDate = new Date(selectedDate);
-      startDate.setHours(0, 0, 0, 0); // Start of selected day
+      startDate.setHours(0, 0, 0, 0);
 
-      endDate = new Date(); // Current date & time
+      endDate = new Date();
     }
 
     if (selectedDate && selectedEndDate) {
-      // If both start and end date exist, use them as given
       startDate = new Date(selectedDate);
+      startDate.setHours(0, 0, 0, 0);
+
       endDate = new Date(selectedEndDate);
+      endDate.setHours(23, 59, 59, 999);
     }
 
     if (!selectedDate) {
-      // Default: Yesterday morning to current time
       startDate = new Date();
       startDate.setDate(startDate.getDate() - 1);
-      startDate.setHours(0, 0, 0, 0); // Set to 00:00:00.000
-
-      endDate = new Date(); // Current time
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date();
     }
 
     getArrivalResponsesByDate(startDate, endDate);

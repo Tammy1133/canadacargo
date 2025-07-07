@@ -6,6 +6,7 @@ import { getUserDetails } from "../../projectcomponents/auth";
 import axios from "axios";
 import { PencilIcon } from "@heroicons/react/24/outline";
 import { useNavigate, useParams } from "react-router-dom";
+import { IsCanada } from "../../utils/globalConstantUtil";
 
 export const EditShipmentPage = () => {
   // State for shipper information
@@ -306,7 +307,8 @@ export const EditShipmentPage = () => {
           comments: comments,
           pickup_location: loc?.name || "",
           pickup_price: loc?.price || "",
-          province: selectedProvince,
+          province:
+            origin?.toUpperCase() === "CANADA" ? "---" : selectedProvince,
           product_type: productTypes[selectedProductType]?.name,
           product_type_price: productTypes[selectedProductType]?.price,
         },
@@ -596,7 +598,7 @@ export const EditShipmentPage = () => {
               {productTypes.map((eachShipment, index) => {
                 return (
                   <option value={index}>
-                    {eachShipment?.name} ( ₦
+                    {eachShipment?.name} ( {IsCanada ? "$" : "₦"}
                     {Number(eachShipment?.price)?.toLocaleString()})
                   </option>
                 );
@@ -684,7 +686,8 @@ export const EditShipmentPage = () => {
                   {deliveryLocation.map((eachShipment) => {
                     return (
                       <option value={eachShipment?.name}>
-                        {eachShipment?.name} (₦ {eachShipment?.price})
+                        {eachShipment?.name} ({IsCanada ? "$" : "₦"}{" "}
+                        {eachShipment?.price})
                       </option>
                     );
                   })}
@@ -752,21 +755,25 @@ export const EditShipmentPage = () => {
             className="border border-gray-300 rounded px-2 py-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
           /> */}
 
-            <label className="block mb-2 mt-5 font-medium">
-              Select Province
-            </label>
+            {origin?.toUpperCase() !== "CANADA" && (
+              <>
+                <label className="block mb-2 mt-5 font-medium">
+                  Select Province
+                </label>
 
-            <select
-              value={selectedProvince}
-              onChange={(e) => setSelectedProvice(e.target.value)}
-              className="border border-gray-300 rounded px-2 py-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Select Province</option>
+                <select
+                  value={selectedProvince}
+                  onChange={(e) => setSelectedProvice(e.target.value)}
+                  className="border border-gray-300 rounded px-2 py-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select Province</option>
 
-              {provincesAndTerritories.map((eachProvince) => {
-                return <option value={eachProvince}>{eachProvince}</option>;
-              })}
-            </select>
+                  {provincesAndTerritories.map((eachProvince) => {
+                    return <option value={eachProvince}>{eachProvince}</option>;
+                  })}
+                </select>
+              </>
+            )}
           </div>
 
           {/* Submit Button */}
