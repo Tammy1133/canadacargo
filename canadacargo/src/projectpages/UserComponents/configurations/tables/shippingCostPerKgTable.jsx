@@ -5,6 +5,7 @@ import "datatables.net-buttons/js/buttons.colVis";
 import "datatables.net-buttons/js/buttons.html5";
 import "datatables.net-buttons/js/buttons.print";
 import jszip from "jszip";
+import { IsCanada } from "../../../../utils/globalConstantUtil";
 // import { ToastContainer } from "react-toastify";
 // import "react-toastify/dist/ReactToastify.css";
 
@@ -44,8 +45,8 @@ export const ShippingCostPerKgTable = ({ alltaxrates }) => {
       const mappedData = alltaxrates.map((tax, index) => {
         return [
           index + 1,
-          `₦ ${Number(tax.oldrate)?.toLocaleString()}`,
-          `₦ ${Number(tax.newrate)?.toLocaleString()}`,
+          `${IsCanada ? "$" : "₦"} ${Number(tax.oldrate)?.toLocaleString()}`,
+          `${IsCanada ? "$" : "₦"} ${Number(tax.newrate)?.toLocaleString()}`,
           tax.date,
         ];
       });

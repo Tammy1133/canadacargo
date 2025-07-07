@@ -10,6 +10,8 @@ import {
 } from "@heroicons/react/24/outline";
 import { getUserDetails } from "../../projectcomponents/auth";
 import axios from "axios";
+import Select from "react-select";
+import { getBoxNumbersFromItems } from "../../utils/globalConstantUtil";
 
 function Arrivals() {
   const s = [];
@@ -28,14 +30,69 @@ function Arrivals() {
   const [displayingShipperInfo, setDisplayingShipperInfo] = useState({});
   const [sendloading, setsendloading] = useState(false);
   const [chosenTrackingNumber, setChosenTrackingNumber] = useState("");
-
   const [originalTrans, setOriginalTrans] = useState([]);
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedEndDate, setSelectedEndDate] = useState("");
+  const [allOrigins, setAllOrigins] = useState([]);
+  const [allDestinations, setAllDestinations] = useState([]);
+  const [selectedOrigin, setSelectedOrigin] = useState("");
+  const [selectedDestination, setSelectedDestination] = useState("");
+  const getAllOrigins = async () => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/getAllOrigins`,
+        {
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setAllOrigins(response.data.origins || []);
+    } catch (error) {
+      console.error(
+        "Error fetching origins:",
+        error.response?.data || error.message
+      );
+      setAllOrigins([]);
+    }
+  };
+
+  const getAllDestinations = async () => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/getAllDestinations`,
+        {
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setAllDestinations(response.data.destinations || []);
+    } catch (error) {
+      console.error(
+        "Error fetching destinations:",
+        error.response?.data || error.message
+      );
+      setAllDestinations([]);
+    }
+  };
+
+  useEffect(() => {
+    setsendloading(true);
+    const fetchData = async () => {
+      await Promise.all([getAllOrigins(), getAllDestinations()]);
+    };
+    fetchData();
+    setsendloading(false);
+  }, []);
 
   const viewShipmentInfo = (id) => {
     setShipmentModalShowing(true);
   };
   const viewBarcodeInfo = (id) => {
-    console.log(id);
+    // console.log(id);
 
     setSelectedId(id); // Save the selected ID
     setIsModalOpen(true); // Open modal when button is clicked
@@ -44,6 +101,16 @@ function Arrivals() {
   const getItemsArrived = async () => {
     try {
       setsendloading(true);
+      const currentDate = new Date().toISOString().split("T")[0];
+      const formattedStartDate = selectedDate || currentDate;
+      const formattedEndDate = selectedEndDate || currentDate;
+
+      const params = {};
+      if (selectedOrigin) params.origin = selectedOrigin;
+      if (selectedDestination) params.destination = selectedDestination;
+      params.startdate = formattedStartDate;
+      params.enddate = formattedEndDate;
+
       const response = await axios.get(
         `${import.meta.env.VITE_API_URL}/getItemsArrived`,
         {
@@ -51,22 +118,25 @@ function Arrivals() {
             Authorization: `Bearer ${userToken}`,
             "Content-Type": "application/json",
           },
+          params,
         }
       );
+
       const trackingNumbers = response.data.data.flatMap((item) =>
         item.items.map((i) => i.tracking_number)
       );
       const uniqueTrackingNumbers = [...new Set(trackingNumbers)];
+
       setTracking_numbers(
-        uniqueTrackingNumbers.filter((eachItem) => {
-          return eachItem !== "";
-        })
+        uniqueTrackingNumbers.filter((eachItem) => eachItem !== "")
       );
+
+      console.log(response.data.data);
+
       setDispTrans(response.data.data);
       setTrans(response.data.data);
 
       console.log(response.data.data);
-
       setsendloading(false);
     } catch (error) {
       setsendloading(false);
@@ -92,10 +162,7 @@ function Arrivals() {
         }
       );
 
-      // console.log(response);
-
-      Swal.fire("Success!", "Mails has been sent successfully.", "success");
-
+      Swal.fire("Success!", "Mails have been sent successfully.", "success");
       setsendloading(false);
     } catch (error) {
       setsendloading(false);
@@ -103,41 +170,15 @@ function Arrivals() {
         "Error fetching completed payments:",
         error.response?.data || error.message
       );
-    }
-  };
-  const sendArrivalNotification = async (
-    senderEmail,
-    receiverEmail,
-    trans_id
-  ) => {
-    try {
-      setsendloading(true);
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/sendArrivalNotification`,
-        { senderEmail, receiverEmail, trans_id },
-        {
-          headers: {
-            Authorization: `Bearer ${userToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      Swal.fire("Success!", "Mail has been sent successfully.", "success");
-
-      setsendloading(false);
-    } catch (error) {
-      setsendloading(false);
-      console.error(
-        "Error fetching completed payments:",
-        error.response?.data || error.message
-      );
+      Swal.fire("Error!", "Failed to send some mails.", "error");
     }
   };
 
   useEffect(() => {
-    getItemsArrived();
-  }, []);
+    if (selectedOrigin) {
+      getItemsArrived();
+    }
+  }, [selectedOrigin, selectedDestination, selectedDate, selectedEndDate]);
 
   useEffect(() => {
     if (originalTrans.length === 0 && trans.length > 0) {
@@ -162,9 +203,7 @@ function Arrivals() {
     setDispTrans(filteredTrans);
   };
 
-  const handleSendMail = (id, items) => {
-    // console.log(items);
-
+  const handleSendMail = (l, items) => {
     let filteredItems = items?.filter((eachItem) => {
       return eachItem.status === "Arrived";
     });
@@ -180,9 +219,9 @@ function Arrivals() {
       if (result.isConfirmed) {
         sendArrivalNotifications([
           {
-            senderEmail: displayingShipperInfo?.shipper_email,
-            receiverEmail: displayingShipperInfo?.receiver_email,
-            trans_id: displayingShipperInfo?.trans_id,
+            senderEmail: l?.shipment_info?.shipper_email,
+            receiverEmail: l?.shipment_info?.receiver_email,
+            trans_id: l?.shipment_info?.trans_id,
           },
         ]);
       }
@@ -250,29 +289,121 @@ function Arrivals() {
     }
   }, [chosenTrackingNumber]);
 
+  let formattedOptions = [
+    { value: "", label: "All Tracking Numbers" },
+    ...tracking_numbers.map((num) => ({
+      value: num,
+      label: num,
+    })),
+  ];
+
   return (
     userToken && (
       <>
+        <div className=" mx-auto p-6 bg-white shadow-md rounded-xl ">
+          <h2 className="text-lg font-semibold mb-4">Select Locations</h2>
+
+          <div className="flex space-x-4">
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Origin
+              </label>
+              <select
+                value={selectedOrigin}
+                onChange={(e) => setSelectedOrigin(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">-- Select Origin --</option>
+                {allOrigins.map((origin, index) => (
+                  <option key={index} value={origin.name}>
+                    {origin.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Destination
+              </label>
+              <select
+                value={selectedDestination}
+                onChange={(e) => setSelectedDestination(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">-- Select Destination --</option>
+                {allDestinations.map((destination, index) => (
+                  <option key={index} value={destination.name}>
+                    {destination.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center  bg-white shadow-md rounded-lg px-6  pb-2 -mt-4 mb-5 space-y-4 sm:space-y-0 sm:space-x-4">
+          <div className="flex flex-col">
+            <label
+              htmlFor="startDate"
+              className="text-sm font-semibold text-gray-700"
+            >
+              Select Start Date
+            </label>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => {
+                setSelectedDate(e.target.value);
+              }}
+              id="date"
+              className="mt-1 border rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            />
+          </div>
+          <div className="flex flex-col">
+            <label
+              htmlFor="startDate"
+              className="text-sm font-semibold text-gray-700"
+            >
+              Select End Date
+            </label>
+            <input
+              type="date"
+              value={selectedEndDate}
+              onChange={(e) => {
+                setSelectedEndDate(e.target.value);
+              }}
+              id="date"
+              className="mt-1 border rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            />
+          </div>
+        </div>
+
         <TitleCard
           title="Pending Delivered items"
           topMargin="mt-2"
           TopSideButtons={
             <div className="flex flex-wrap gap-2">
-              <select
-                name=""
-                id=""
-                className="input input-sm input-bordered w-full "
-                value={chosenTrackingNumber}
-                onChange={(e) => {
-                  setChosenTrackingNumber(e.target.value);
+              <Select
+                options={formattedOptions}
+                value={formattedOptions.find(
+                  (opt) => opt.value === chosenTrackingNumber
+                )}
+                onChange={(selectedOption) =>
+                  setChosenTrackingNumber(selectedOption?.value)
+                }
+                placeholder="Select tracking number"
+                isSearchable
+                className="w-full text-sm"
+                styles={{
+                  control: (base) => ({
+                    ...base,
+                    borderRadius: "0.5rem",
+                    borderColor: "#d1d5db",
+                    padding: "0.125rem 0.25rem",
+                  }),
                 }}
-              >
-                <option value="">All Tracking Numbers</option>
-
-                {tracking_numbers?.map((eachitem) => {
-                  return <option value={eachitem}>{eachitem}</option>;
-                })}
-              </select>
+              />
               <div className="input-group  relative flex flex-wrap items-stretch w-full ">
                 <input
                   type="search"
@@ -303,12 +434,14 @@ function Arrivals() {
             <table className="table w-full">
               <thead>
                 <tr>
+                  <th className="!font-bold !text-center">Date</th>
+                  <th className="!font-bold !text-center">Boxes</th>
+                  <th className="!font-bold !text-center">No of cartons</th>
                   <th className="!font-bold !text-center">Shipper Name</th>
                   <th className="!font-bold !text-center">Phone Number</th>
                   <th className="!font-bold !text-center min-w-[170px]">
                     Address
                   </th>
-                  <th className="!font-bold !text-center">Number of cartons</th>
                   <th className="!font-bold !text-center">Origin</th>
                   <th className="!font-bold !text-center">Status</th>
                   <th className="!font-bold !text-center">Action</th>
@@ -319,6 +452,22 @@ function Arrivals() {
                   return (
                     <tr key={k}>
                       <td className="truncate">
+                        {new Date(
+                          l?.shipment_info?.created_date
+                        )?.toLocaleDateString() || "-"}
+                      </td>
+
+                      <td className="">
+                        {getBoxNumbersFromItems(
+                          l?.items?.filter((l) => {
+                            return l?.status?.toUpperCase() === "ARRIVED";
+                          })
+                        )}
+                      </td>
+                      <td className="truncate">
+                        {l.items === "[]" ? 0 : l?.items?.length}
+                      </td>
+                      <td className="truncate">
                         {l.shipment_info?.shipper_name}
                       </td>
                       <td className="truncate">
@@ -327,8 +476,7 @@ function Arrivals() {
                       <td className="truncate max-w-[200px]">
                         {l.shipment_info?.receiver_address}
                       </td>
-                      <td className="truncate">{l?.items?.length}</td>
-                      <td className="truncate">{l?.shipment_info?.location}</td>
+                      <td className="truncate">{l?.shipment_info?.origin}</td>
                       <td className="truncate">
                         {Object.entries(
                           l?.items?.reduce((acc, item) => {
@@ -367,8 +515,8 @@ function Arrivals() {
                           <button
                             className="btn btn-sm bg-blue-600 text-white flex items-center space-x-2 px-4  rounded shadow hover:bg-blue-700 focus:outline-none"
                             onClick={() => {
-                              handleSendMail(l.id, l?.items);
                               setDisplayingShipperInfo(l.shipment_info);
+                              handleSendMail(l, l?.items);
                             }}
                           >
                             <EnvelopeIcon className="h-5 w-5" />

@@ -5,6 +5,8 @@ import "datatables.net-buttons/js/buttons.colVis";
 import "datatables.net-buttons/js/buttons.html5";
 import "datatables.net-buttons/js/buttons.print";
 import jszip from "jszip";
+import { all } from "axios";
+import { IsCanada } from "../../../../utils/globalConstantUtil";
 
 export const PieceTypesTable = ({ alltaxrates, deleteCourier }) => {
   const [taxData, setTaxData] = useState(alltaxrates);
@@ -57,7 +59,10 @@ export const PieceTypesTable = ({ alltaxrates, deleteCourier }) => {
   useEffect(() => {
     if (tableRef.current) {
       const mappedData = alltaxrates.map((tax) => {
-        return [tax.name, `₦ ${Number(tax.price)?.toLocaleString()}`];
+        return [
+          tax.name,
+          `${IsCanada ? "$" : "₦"} ${Number(tax.price)?.toLocaleString()}`,
+        ];
       });
 
       tableRef.current.clear();

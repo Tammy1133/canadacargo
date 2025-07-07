@@ -135,8 +135,6 @@ export const ExtraFees = () => {
 
       setAllTaxRates(response.data.pieceTypes);
       setIsLoading(false);
-
-    
     } catch (error) {
       setIsLoading(false);
       console.error(

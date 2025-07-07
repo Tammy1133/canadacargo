@@ -57,6 +57,7 @@ const login = async (req, res) => {
         email: user[0].email,
         firstname: user[0].firstname,
         lastname: user[0].lastname,
+        location: user[0].location,
         modules: JSON.parse(user[0].modules), // Parse the stringified modules
       },
     });

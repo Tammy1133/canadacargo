@@ -1,161 +1,149 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-  </head>
-  <body>
-    <div style="font-family: Arial, sans-serif; color: #333">
-      <div style="text-align: center">
-        <img
-          src="cid:logo"
-          alt="Canada Cargo"
-          style="height: 50px; margin-bottom: 10px"
-        />
-        <h2 style="color: #004085">Shipment Processed Successfully</h2>
-      </div>
+<div
+  style="
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #ffffff69;
+    border-radius: 8px;
+    font-family: Arial, sans-serif;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.044);
+  "
+>
+  <div
+    style="
+      text-align: center;
+      padding: 20px;
+      background-color: #007bff1f;
+      border-radius: 8px 8px 0 0;
+    "
+  >
+    <img
+      src="cid:logo"
+      alt="Canada Cargo Logo"
+      style="
+        max-width: 180px;
+        margin-bottom: 10px;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+      "
+    />
+  </div>
+  <div
+    style="
+      padding: 20px;
+      color: #333;
+      line-height: 1.6;
+      background-color: #f9f9f93f;
+      border-radius: 0 0 8px 8px;
+    "
+  >
+    <p style="font-size: 16px; margin-bottom: 20px">
+      Dear ${receiver_name} and ${shipper_name},
+    </p>
 
-      <p>Dear ${shipmentInfo.shipper_name},</p>
+    <p style="font-size: 16px; margin-bottom: 20px">
+      Your shipments from Nigeria have arrived in Canada.
+    </p>
 
-      <p>
-        We are pleased to inform you that your shipment with transaction ID
-        <strong>${trans_id}</strong> has been successfully processed.
-      </p>
+    <p style="font-size: 16px; margin-bottom: 20px">
+      <strong>Item Status Summary:</strong> ${statusSummary}
+    </p>
 
-      <p><strong>Your invoice has been attached to this email.</strong></p>
+    ${ isOntario ? `
+    <p style="font-size: 16px; margin-bottom: 20px">
+      Your customs clearing fees are <strong>$${clearingFeeValue}</strong>. This
+      fee applies only to the items that have arrived.
+    </p>
+    ` : `
+    <p style="font-size: 16px; margin-bottom: 20px">
+      Your customs clearing fees <strong>($${clearingFeeValue})</strong> will be
+      added to your delivery cost.
+    </p>
+    ` }
 
-      <h3 style="color: #004085">Shipment Details</h3>
-      <table style="border-collapse: collapse; width: 100%; font-size: 14px">
-        <tbody>
-          <tr style="background-color: #f8f9fa">
-            <td style="padding: 8px; border: 1px solid #dee2e6">
-              Shipper Name
-            </td>
-            <td style="padding: 8px; border: 1px solid #dee2e6">
-              ${shipmentInfo.shipper_name}
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 8px; border: 1px solid #dee2e6">
-              Shipper Phone
-            </td>
-            <td style="padding: 8px; border: 1px solid #dee2e6">
-              ${shipmentInfo.shipper_phone}
-            </td>
-          </tr>
-          <tr style="background-color: #f8f9fa">
-            <td style="padding: 8px; border: 1px solid #dee2e6">
-              Shipper Address
-            </td>
-            <td style="padding: 8px; border: 1px solid #dee2e6">
-              ${shipmentInfo.shipper_address}
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 8px; border: 1px solid #dee2e6">
-              Shipper Email
-            </td>
-            <td style="padding: 8px; border: 1px solid #dee2e6">
-              ${shipmentInfo.shipper_email}
-            </td>
-          </tr>
-          <tr style="background-color: #f8f9fa">
-            <td style="padding: 8px; border: 1px solid #dee2e6">
-              Receiver Name
-            </td>
-            <td style="padding: 8px; border: 1px solid #dee2e6">
-              ${shipmentInfo.receiver_name}
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 8px; border: 1px solid #dee2e6">
-              Receiver Phone
-            </td>
-            <td style="padding: 8px; border: 1px solid #dee2e6">
-              ${shipmentInfo.receiver_phone}
-            </td>
-          </tr>
-          <tr style="background-color: #f8f9fa">
-            <td style="padding: 8px; border: 1px solid #dee2e6">
-              Receiver Address
-            </td>
-            <td style="padding: 8px; border: 1px solid #dee2e6">
-              ${shipmentInfo.receiver_address}
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 8px; border: 1px solid #dee2e6">
-              Receiver Email
-            </td>
-            <td style="padding: 8px; border: 1px solid #dee2e6">
-              ${shipmentInfo.receiver_email}
-            </td>
-          </tr>
-          <tr style="background-color: #f8f9fa">
-            <td style="padding: 8px; border: 1px solid #dee2e6">
-              Shipment Type
-            </td>
-            <td style="padding: 8px; border: 1px solid #dee2e6">
-              ${shipmentInfo.shipment_type}
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 8px; border: 1px solid #dee2e6">Box Number</td>
-            <td style="padding: 8px; border: 1px solid #dee2e6">
-              ${shipmentInfo.box_number}
-            </td>
-          </tr>
-          <tr style="background-color: #f8f9fa">
-            <td style="padding: 8px; border: 1px solid #dee2e6">Courier</td>
-            <td style="padding: 8px; border: 1px solid #dee2e6">
-              ${shipmentInfo.courier}
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 8px; border: 1px solid #dee2e6">
-              Payment Mode
-            </td>
-            <td style="padding: 8px; border: 1px solid #dee2e6">
-              ${shipmentInfo.payment_mode}
-            </td>
-          </tr>
-          <tr style="background-color: #f8f9fa">
-            <td style="padding: 8px; border: 1px solid #dee2e6">Origin</td>
-            <td style="padding: 8px; border: 1px solid #dee2e6">
-              ${shipmentInfo.origin}
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 8px; border: 1px solid #dee2e6">Destination</td>
-            <td style="padding: 8px; border: 1px solid #dee2e6">
-              ${shipmentInfo.destination}
-            </td>
-          </tr>
-          <tr style="background-color: #f8f9fa">
-            <td style="padding: 8px; border: 1px solid #dee2e6">Pickup Date</td>
-            <td style="padding: 8px; border: 1px solid #dee2e6">
-              ${shipmentInfo.pickup_date}
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 8px; border: 1px solid #dee2e6">
-              Expected Delivery Date
-            </td>
-            <td style="padding: 8px; border: 1px solid #dee2e6">
-              ${shipmentInfo.expected_date_delivery}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <p style="font-size: 16px; margin-bottom: 20px">
+      <strong>Tracking Number:</strong>
+      <span style="font-size: 18px; font-weight: bold; color: #007bff"
+        >${trans_id}</span
+      >
+    </p>
 
-      <p style="margin-top: 20px">
-        Thank you for choosing <strong>Canada Cargo</strong>.
-      </p>
+    ${ isOntario ? `
+    <p style="font-size: 16px; margin-bottom: 20px">
+      ALL PAYMENTS TO<br />
+      <strong>AZEEZ@CANADACARGO.NET</strong>
+    </p>
 
-      <p style="font-size: 13px; color: #6c757d">
-        This is an automated message. Please do not reply to this email.
-      </p>
-    </div>
-  </body>
-</html>
+    <a
+      href="https://tracking.canadacargo.net/confirmpayment/${trans_id}"
+      target="_blank"
+      style="color: #007bff; font-weight: bold; text-decoration: none"
+    >
+      After making the payment, click this link to notify us
+    </a>
+
+    <p style="font-size: 16px; margin-bottom: 20px">
+      Pick up can be done at:<br />
+      <strong>Unit 212, 1885 Clements Road, Pickering, Ontario, L1W 3V4</strong
+      ><br />
+      <strong>Hours of operation:</strong><br />
+      Monday to Friday: 10 AM - 7 PM<br />
+      Saturday: 12 Noon - 3 PM
+    </p>
+    ` : `
+    <p style="font-size: 16px; margin-bottom: 20px">
+      Outside Ontario locations:<br />
+      <a
+        href="https://tracking.canadacargo.net/otherprovince/${trans_id}"
+        target="_blank"
+        style="color: #007bff; font-weight: bold; text-decoration: none"
+      >
+        Click here to send your items Outside Ontario</a
+      >
+    </p>
+    ` }
+
+    <p style="font-size: 16px; margin-bottom: 20px">
+      Track your shipment using the link below:<br />
+      <a
+        href="https://tracking.canadacargo.net/trackshipment/${trans_id}"
+        target="_blank"
+        style="color: #007bff; font-weight: bold; text-decoration: none"
+      >
+        Track your shipment here</a
+      >
+    </p>
+
+    <p style="font-size: 16px; margin-bottom: 20px">
+      Contact Numbers:<br />
+      <strong>289-660-0515</strong><br />
+      <strong>647-916-9511</strong><br />
+      <strong>647-773-9511</strong>
+    </p>
+
+    <p style="font-size: 16px; margin-top: 20px">
+      Thank you for choosing Canada Cargo!
+    </p>
+  </div>
+
+  <div
+    style="
+      text-align: center;
+      font-size: 14px;
+      color: #888;
+      padding: 10px;
+      background-color: #f4f4f4;
+      border-radius: 0 0 8px 8px;
+    "
+  >
+    <p style="margin: 0">
+      Canada Cargo |
+      <a href="www.canadacargo.net" style="color: #007bff"
+        >www.canadacargo.net</a
+      >
+    </p>
+    <p style="margin: 0">© 2025 Canada Cargo. All Rights Reserved.</p>
+  </div>
+</div>

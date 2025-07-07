@@ -18,3 +18,15 @@ export const CONFIRMATION_MODAL_CLOSE_TYPES = Object.freeze({
 export const MODAL_CLOSE_TYPES = Object.freeze({
   LEAD_DELETE: "LEAD_DELETE",
 });
+
+export const IsCanada =
+  localStorage.getItem("location")?.toUpperCase() === "CANADA" ? true : false;
+
+export function getBoxNumbersFromItems(items) {
+  if (!Array.isArray(items)) return "";
+
+  return items
+    .map((item) => item?.box_number)
+    .filter(Boolean)
+    .join(", ");
+}

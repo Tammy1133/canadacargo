@@ -83,7 +83,7 @@ export const OtherProvince = () => {
                   value={trackingNumber}
                   disabled
                   placeholder="Enter your tracking number"
-                  className="w-full mt-1 px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full mt-1 px-4 py-2 text-gray-700 !bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
               <div>
@@ -101,7 +101,7 @@ export const OtherProvince = () => {
                     setEmail(e.target.value);
                   }}
                   placeholder="Enter your email"
-                  className="w-full mt-1 px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full mt-1 px-4 py-2 text-gray-700 !bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
               <button

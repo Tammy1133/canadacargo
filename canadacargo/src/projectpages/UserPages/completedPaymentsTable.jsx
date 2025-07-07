@@ -23,6 +23,7 @@ import {
   Font,
   PDFDownloadLink,
 } from "@react-pdf/renderer";
+import { IsCanada } from "../../utils/globalConstantUtil";
 
 function CompletedPaymentsTable() {
   const [trans, setTrans] = useState([]);
@@ -106,9 +107,9 @@ function CompletedPaymentsTable() {
             <td style="border: 1px solid #ddd; padding: 8px;">${
               shipment.product_type
             }</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">₦${Number(
-              shipment.product_type_price
-            )?.toLocaleString()}</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">${
+              IsCanada ? "$" : "₦"
+            } ${Number(shipment.product_type_price)?.toLocaleString()}</td>
           </tr>
       </tbody>
     </table>
@@ -134,19 +135,21 @@ function CompletedPaymentsTable() {
             <td style="border: 1px solid #ddd; padding: 8px;">${Number(
               calculations?.totalWeight
             )?.toLocaleString()}</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
-              calculations?.shippingRate
-            )?.toLocaleString()}</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
-              calculations?.itemFee
-            )?.toLocaleString()}</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
-              pickup_fee
-            )?.toLocaleString()}</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
-              shipment?.total_extra_fees || 0
-            )?.toLocaleString()}</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
+            <td style="border: 1px solid #ddd; padding: 8px;">${
+              IsCanada ? "$" : "₦"
+            } ${Number(calculations?.shippingRate)?.toLocaleString()}</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">${
+              IsCanada ? "$" : "₦"
+            } ${Number(calculations?.itemFee)?.toLocaleString()}</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">${
+              IsCanada ? "$" : "₦"
+            } ${Number(pickup_fee)?.toLocaleString()}</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">${
+              IsCanada ? "$" : "₦"
+            } ${Number(shipment?.total_extra_fees || 0)?.toLocaleString()}</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">${
+              IsCanada ? "$" : "₦"
+            } ${Number(
               calculations?.totalSum +
                 Number(pickup_fee) +
                 (shipment?.total_extra_fees
@@ -507,7 +510,9 @@ function CompletedPaymentsTable() {
     userToken && (
       <>
         <TitleCard
-          title={`Completed Payments (${trans.length}) (₦ ${trans
+          title={`Completed Payments (${trans.length}) (${
+            IsCanada ? "$" : "₦"
+          } ${trans
             ?.reduce((acc, l) => {
               return (
                 acc +
@@ -586,7 +591,7 @@ function CompletedPaymentsTable() {
                     Address
                   </th>
                   <th className="!font-bold !text-center">Email</th>
-                  <th className="!font-bold !text-center">Number of cartons</th>
+                  <th className="!font-bold !text-center">No of cartons</th>
                   <th className="!font-bold !text-center">Amount</th>
                   <th className="!font-bold !text-center">Actions</th>
                 </tr>
@@ -608,7 +613,7 @@ function CompletedPaymentsTable() {
                         {l.items === "[]" ? 0 : l?.items?.length}
                       </td>
                       <td className="truncate">
-                        ₦
+                        {IsCanada ? "$" : "₦"}
                         {Number(
                           calculateShipping(
                             l.items,

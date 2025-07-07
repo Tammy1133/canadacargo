@@ -6,6 +6,7 @@ import { TaxHistoryTable } from "./tables/taxHistoryTable";
 import { getUserDetails } from "../../../projectcomponents/auth";
 import Swal from "sweetalert2";
 import { ShippingCostPerKgTable } from "./tables/shippingCostPerKgTable";
+import { IsCanada } from "../../../utils/globalConstantUtil";
 
 export const TaxConfig = () => {
   const [userExists, setUserExists] = useState("");
@@ -116,7 +117,9 @@ export const TaxConfig = () => {
         <h2 className="text-xl font-semibold mb-4">Update Shipping Cost</h2>
 
         <div className="mb-4">
-          <p className="text-gray-700 mb-2">Current Cost: ₦ {shippingCost}</p>
+          <p className="text-gray-700 mb-2">
+            Current Cost: {IsCanada ? "$" : "₦"} {shippingCost}
+          </p>
         </div>
 
         <form

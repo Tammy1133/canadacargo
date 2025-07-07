@@ -14,6 +14,7 @@ import MyDoughnutChart from "../AdminComponents/myDonoughNutChart";
 import { getUserDetails } from "../../projectcomponents/auth";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { IsCanada } from "../../utils/globalConstantUtil";
 
 function Dashboard() {
   const dispatch = useDispatch();
@@ -62,13 +63,17 @@ function Dashboard() {
 
     {
       title: "Revenue this month",
-      value: `₦ ${Number(pageStats?.monthlyRevenue)?.toLocaleString()}`,
+      value: `${IsCanada ? "$" : "₦"} ${Number(
+        pageStats?.monthlyRevenue
+      )?.toLocaleString()}`,
       icon: <BoltIcon className="w-8 h-8" />,
       description: "↗︎ 45 vs yesterday",
     },
     {
       title: "Revenue this year",
-      value: `₦ ${Number(pageStats?.yearlyRevenue)?.toLocaleString()}`,
+      value: `${IsCanada ? "$" : "₦"} ${Number(
+        pageStats?.yearlyRevenue
+      )?.toLocaleString()}`,
       icon: <CreditCardIcon className="w-8 h-8" />,
       description: "↗︎ 42 (25%)",
     },
@@ -214,7 +219,8 @@ function Dashboard() {
                 Total Revenue This Month
               </div>
               <div className="stat-value text-2xl">
-                ₦ {Number(pageStats?.monthlyRevenue)?.toLocaleString()}
+                {IsCanada ? "$" : "₦"}
+                {Number(pageStats?.monthlyRevenue)?.toLocaleString()}
               </div>
               <div className="stat-actions mt-0">
                 <button

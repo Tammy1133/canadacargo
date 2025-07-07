@@ -39,6 +39,7 @@
     "react-router-dom": "^6.4.3",
     "react-scripts": "5.0.1",
     "react-select": "^5.10.1",
+    "react-select-search": "^4.1.8",
     "react-tailwindcss-datepicker": "^1.6.0",
     "react-to-print": "^3.0.2",
     "sweetalert2": "^11.14.5",

@@ -408,7 +408,7 @@ export const NewUserEdit = () => {
                       }}
                     >
                       <div className="mb-4">
-                        <label className="mb-3 block text-black dark:text-white">
+                        <label className="mb-3 block !text-black dark:text-white">
                           First Name
                         </label>
                         <input
@@ -417,12 +417,12 @@ export const NewUserEdit = () => {
                           placeholder="First Name"
                           value={selectedUser.firstname}
                           onChange={handleInputChange}
-                          className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                          className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-3 px-5 !text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                         />
                       </div>
 
                       <div className="mb-4">
-                        <label className="mb-3 block text-black dark:text-white">
+                        <label className="mb-3 block !text-black dark:text-white">
                           Last Name
                         </label>
                         <input
@@ -431,12 +431,12 @@ export const NewUserEdit = () => {
                           placeholder="Last Name"
                           value={selectedUser.lastname}
                           onChange={handleInputChange}
-                          className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                          className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-3 px-5 !text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                         />
                       </div>
 
                       <div className="mb-4">
-                        <label className="mb-3 block text-black dark:text-white">
+                        <label className="mb-3 block !text-black dark:text-white">
                           Email
                         </label>
                         <input
@@ -446,11 +446,11 @@ export const NewUserEdit = () => {
                           disabled
                           value={selectedUser.email}
                           onChange={handleInputChange}
-                          className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                          className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-3 px-5 !text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                         />
                       </div>
                       <div className="mb-4">
-                        <label className="mb-3 block text-black dark:text-white">
+                        <label className="mb-3 block !text-black dark:text-white">
                           Password
                         </label>
                         <input
@@ -461,12 +461,12 @@ export const NewUserEdit = () => {
                           onChange={(e) => {
                             setNewPassword(e.target.value);
                           }}
-                          className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                          className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent py-3 px-5 !text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                         />
                       </div>
 
                       <div className="mb-4.5">
-                        <label className="mb-2.5 block font-medium text-black dark:text-white">
+                        <label className="mb-2.5 block font-medium !text-black dark:text-white">
                           What does the user have access to?
                         </label>
                         <div className="flex flex-col gap-3">

@@ -13,6 +13,7 @@ import {
 import axios from "axios";
 import { getUserDetails } from "../../projectcomponents/auth";
 import { useNavigate } from "react-router-dom";
+import { IsCanada } from "../../utils/globalConstantUtil";
 
 function AllShipments() {
   const [trans, setTrans] = useState([]);
@@ -116,15 +117,15 @@ function AllShipments() {
             <td style="border: 1px solid #ddd; padding: 8px;">${Number(
               calculations?.totalWeight
             )?.toLocaleString()}</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
-              calculations?.shippingRate
-            )?.toLocaleString()}</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
-              calculations?.itemFee
-            )?.toLocaleString()}</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
-              calculations?.totalSum
-            )?.toLocaleString()}</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">${
+              IsCanada ? "$" : "₦"
+            } ${Number(calculations?.shippingRate)?.toLocaleString()}</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">${
+              IsCanada ? "$" : "₦"
+            } ${Number(calculations?.itemFee)?.toLocaleString()}</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">${
+              IsCanada ? "$" : "₦"
+            } ${Number(calculations?.totalSum)?.toLocaleString()}</td>
           </tr>`
           )
           .join("")}
@@ -160,6 +161,59 @@ function AllShipments() {
   const [loading, setLoading] = useState(false);
   const [sendloading, setsendloading] = useState(false);
 
+  const [allOrigins, setAllOrigins] = useState([]);
+  const [allDestinations, setAllDestinations] = useState([]);
+  const [selectedOrigin, setSelectedOrigin] = useState("");
+  const [selectedDestination, setSelectedDestination] = useState("");
+  const getAllOrigins = async () => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/getAllOrigins`,
+        {
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setAllOrigins(response.data.origins || []);
+    } catch (error) {
+      console.error(
+        "Error fetching origins:",
+        error.response?.data || error.message
+      );
+      setAllOrigins([]);
+    }
+  };
+  const getAllDestinations = async () => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/getAllDestinations`,
+        {
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setAllDestinations(response.data.destinations || []);
+    } catch (error) {
+      console.error(
+        "Error fetching destinations:",
+        error.response?.data || error.message
+      );
+      setAllDestinations([]);
+    }
+  };
+  useEffect(() => {
+    setsendloading(true);
+    const fetchData = async () => {
+      await Promise.all([getAllOrigins(), getAllDestinations()]);
+    };
+    fetchData();
+    setsendloading(false);
+  }, []);
+
   const getPendingPayments = async (date) => {
     try {
       const response = await axios.post(
@@ -188,6 +242,7 @@ function AllShipments() {
   const getCompletedPayments = async () => {
     try {
       setsendloading(true);
+
       let startDate = selectedDate;
       let endDate = selectedEndDate;
       const currentDate = new Date().toISOString().split("T")[0];
@@ -201,6 +256,8 @@ function AllShipments() {
             start_date: formattedStartDate,
             end_date: formattedEndDate,
             status: status,
+            origin: selectedOrigin || "", // Add this
+            destination: selectedDestination || "", // And this
           },
           headers: {
             Authorization: `Bearer ${userToken}`,
@@ -264,8 +321,16 @@ function AllShipments() {
   };
 
   useEffect(() => {
-    getCompletedPayments();
-  }, [selectedDate, selectedEndDate, status]);
+    if (selectedOrigin) {
+      getCompletedPayments();
+    }
+  }, [
+    selectedDate,
+    selectedEndDate,
+    status,
+    selectedOrigin,
+    selectedDestination,
+  ]);
 
   function calculateShipping(items, currentRate, pieceTypes) {
     if (items && items.length > 0) {
@@ -304,6 +369,47 @@ function AllShipments() {
   return (
     userToken && (
       <>
+        <div className=" mx-auto p-6 bg-white shadow-md rounded-xl ">
+          <h2 className="text-lg font-semibold mb-4">Select Locations</h2>
+
+          <div className="flex space-x-4">
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Origin
+              </label>
+              <select
+                value={selectedOrigin}
+                onChange={(e) => setSelectedOrigin(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">-- Select Origin --</option>
+                {allOrigins.map((origin, index) => (
+                  <option key={index} value={origin.name}>
+                    {origin.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Destination
+              </label>
+              <select
+                value={selectedDestination}
+                onChange={(e) => setSelectedDestination(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">-- Select Destination --</option>
+                {allDestinations.map((destination, index) => (
+                  <option key={index} value={destination.name}>
+                    {destination.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
         <TitleCard
           title={`All Shipments (${trans.length})`}
           topMargin="mt-2"

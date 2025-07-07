@@ -36,6 +36,9 @@ function Login() {
         password,
       });
 
+      localStorage.setItem("location", response.data.userDetails?.location);
+
+
       const encryptedString = encryptObject(
         response.data,
         import.meta.env.VITE_SECRET_KEY

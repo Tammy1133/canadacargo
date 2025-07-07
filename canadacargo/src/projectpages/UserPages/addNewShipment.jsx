@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import { setPageTitle } from "../../features/common/headerSlice";
 import { getUserDetails } from "../../projectcomponents/auth";
 import axios from "axios";
+import { IsCanada } from "../../utils/globalConstantUtil";
 
 export const AddNewShipment = () => {
   // State for shipper information
@@ -198,7 +199,12 @@ export const AddNewShipment = () => {
       );
 
       setOrigins(response.data.origins);
-      setOrigin(response.data.origins[0]?.name);
+
+      if (IsCanada) {
+        setOrigin("Canada");
+      } else {
+        setOrigin(response.data.origins[0]?.name);
+      }
     } catch (error) {
       console.error(
         "Error fetching tax updates:",
@@ -258,7 +264,12 @@ export const AddNewShipment = () => {
       );
 
       setDestinations(response.data.destinations);
-      setDestination(response.data.destinations[0]?.name);
+
+      if (IsCanada) {
+        setDestination("Nigeria");
+      } else {
+        setDestination(response.data.destinations[0]?.name);
+      }
     } catch (error) {
       console.error(
         "Error fetching destination:",
@@ -297,7 +308,8 @@ export const AddNewShipment = () => {
           comments: comments,
           pickup_location: loc?.name || "",
           pickup_price: loc?.price || "",
-          province: selectedProvince,
+          province:
+            origin?.toUpperCase() === "CANADA" ? "---" : selectedProvince,
           product_type: productTypes[selectedProductType]?.name,
           product_type_price: productTypes[selectedProductType]?.price,
         },
@@ -498,7 +510,7 @@ export const AddNewShipment = () => {
             {productTypes.map((eachShipment, index) => {
               return (
                 <option value={index}>
-                  {eachShipment?.name} ( ₦
+                  {eachShipment?.name} ( {IsCanada ? "$" : "₦"}
                   {Number(eachShipment?.price)?.toLocaleString()})
                 </option>
               );
@@ -580,7 +592,8 @@ export const AddNewShipment = () => {
                 {deliveryLocation.map((eachShipment) => {
                   return (
                     <option value={eachShipment?.name}>
-                      {eachShipment?.name} (₦ {eachShipment?.price})
+                      {eachShipment?.name} ({IsCanada ? "$" : "₦"}{" "}
+                      {eachShipment?.price})
                     </option>
                   );
                 })}
@@ -644,19 +657,25 @@ export const AddNewShipment = () => {
             className="border border-gray-300 rounded px-2 py-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
           /> */}
 
-          <label className="block mb-2 mt-5 font-medium">Select Province</label>
+          {origin?.toUpperCase() !== "CANADA" && (
+            <>
+              <label className="block mb-2 mt-5 font-medium">
+                Select Province
+              </label>
 
-          <select
-            value={selectedProvince}
-            onChange={(e) => setSelectedProvice(e.target.value)}
-            className="border border-gray-300 rounded px-2 py-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Select Province</option>
+              <select
+                value={selectedProvince}
+                onChange={(e) => setSelectedProvice(e.target.value)}
+                className="border border-gray-300 rounded px-2 py-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select Province</option>
 
-            {provincesAndTerritories.map((eachProvince) => {
-              return <option value={eachProvince}>{eachProvince}</option>;
-            })}
-          </select>
+                {provincesAndTerritories.map((eachProvince) => {
+                  return <option value={eachProvince}>{eachProvince}</option>;
+                })}
+              </select>
+            </>
+          )}
         </div>
 
         {/* Submit Button */}

@@ -29,6 +29,10 @@ import BarcodeComponent from "../UserComponents/barcodeComponent";
 import QRCode from "qrcode";
 import Barcode from "react-barcode";
 import DynamicBarcodeToImage from "../UserComponents/barcodeGenerator";
+import {
+  getBoxNumbersFromItems,
+  IsCanada,
+} from "../../utils/globalConstantUtil";
 
 function CompletedPayments() {
   const [trans, setTrans] = useState([]);
@@ -147,9 +151,9 @@ function CompletedPayments() {
             <td style="border: 1px solid #ddd; padding: 8px;">${
               shipment.product_type
             }</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">₦${Number(
-              shipment.product_type_price
-            )?.toLocaleString()}</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">${
+              IsCanada ? "$" : "₦"
+            } ${Number(shipment.product_type_price)?.toLocaleString()}</td>
           </tr>
       </tbody>
     </table>
@@ -175,19 +179,21 @@ function CompletedPayments() {
             <td style="border: 1px solid #ddd; padding: 8px;">${Number(
               calculations?.totalWeight
             )?.toLocaleString()}</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
-              calculations?.shippingRate
-            )?.toLocaleString()}</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
-              calculations?.itemFee
-            )?.toLocaleString()}</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
-              pickup_fee
-            )?.toLocaleString()}</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
-              shipment?.total_extra_fees || 0
-            )?.toLocaleString()}</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">₦ ${Number(
+            <td style="border: 1px solid #ddd; padding: 8px;">${
+              IsCanada ? "$" : "₦"
+            } ${Number(calculations?.shippingRate)?.toLocaleString()}</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">${
+              IsCanada ? "$" : "₦"
+            } ${Number(calculations?.itemFee)?.toLocaleString()}</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">${
+              IsCanada ? "$" : "₦"
+            } ${Number(pickup_fee)?.toLocaleString()}</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">${
+              IsCanada ? "$" : "₦"
+            } ${Number(shipment?.total_extra_fees || 0)?.toLocaleString()}</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">${
+              IsCanada ? "$" : "₦"
+            } ${Number(
               calculations?.totalSum +
                 Number(pickup_fee) +
                 (shipment?.total_extra_fees
@@ -877,13 +883,14 @@ function CompletedPayments() {
               <thead>
                 <tr>
                   <th className="!font-bold !text-center">Date</th>
+                  <th className="!font-bold !text-center">Boxes</th>
+                  <th className="!font-bold !text-center">No of cartons</th>
                   <th className="!font-bold !text-center">Shipper Name</th>
                   <th className="!font-bold !text-center">Phone Number</th>
                   <th className="!font-bold !text-center min-w-[170px]">
                     Address
                   </th>
                   <th className="!font-bold !text-center">Email</th>
-                  <th className="!font-bold !text-center">Number of cartons</th>
                   <th className="!font-bold !text-center">Amount</th>
                   <th className="!font-bold !text-center">Actions</th>
                 </tr>
@@ -895,17 +902,19 @@ function CompletedPayments() {
                       <td className="truncate">
                         {new Date(l?.created_date)?.toLocaleDateString() || "-"}
                       </td>
+                      <td className="">{getBoxNumbersFromItems(l?.items)}</td>
+                      <td className="truncate">
+                        {l.items === "[]" ? 0 : l?.items?.length}
+                      </td>
                       <td className="truncate">{l.shipper_name}</td>
                       <td className="truncate">{l.shipper_phone}</td>
                       <td className="truncate" style={{ maxWidth: "150px" }}>
                         {l.shipper_address}
                       </td>
                       <td className="truncate">{l.shipper_email}</td>
+
                       <td className="truncate">
-                        {l.items === "[]" ? 0 : l?.items?.length}
-                      </td>
-                      <td className="truncate">
-                        ₦
+                        {IsCanada ? "$" : "₦"}
                         {Number(
                           calculateShipping(
                             l.items,
@@ -1143,34 +1152,47 @@ function CompletedPayments() {
                                         {l?.weight} Kg
                                       </Text>
                                       <Text style={styles.tableCell}>
-                                        N
+                                        {l?.origin?.toUpperCase() === "CANADA"
+                                          ? "$"
+                                          : "N"}
                                         {Number(
                                           l?.shipping_rate
                                         )?.toLocaleString()}
                                       </Text>
                                       <Text style={styles.tableCell}>
-                                        N {Number(l?.carton)?.toLocaleString()}
+                                        {l?.origin?.toUpperCase() === "CANADA"
+                                          ? "$"
+                                          : "N"}{" "}
+                                        {Number(l?.carton)?.toLocaleString()}
                                       </Text>
                                       <Text style={styles.tableCell}>
-                                        N{" "}
+                                        {l?.origin?.toUpperCase() === "CANADA"
+                                          ? "$"
+                                          : "N"}{" "}
                                         {Number(
                                           l?.total_extra_fees || 0
                                         )?.toLocaleString()}
                                       </Text>
                                       <Text style={styles.tableCell}>
-                                        N{" "}
+                                        {l?.origin?.toUpperCase() === "CANADA"
+                                          ? "$"
+                                          : "N"}{" "}
                                         {Number(
                                           l?.doorstep_fee
                                         )?.toLocaleString()}
                                       </Text>
                                       <Text style={styles.tableCell}>
-                                        N{" "}
+                                        {l?.origin?.toUpperCase() === "CANADA"
+                                          ? "$"
+                                          : "N"}{" "}
                                         {Number(
                                           l?.pickup_price
                                         )?.toLocaleString()}
                                       </Text>
                                       <Text style={styles.tableCell}>
-                                        N
+                                        {l?.origin?.toUpperCase() === "CANADA"
+                                          ? "$"
+                                          : "N"}
                                         {(
                                           Number(l?.amount) +
                                           Number(l?.pickup_price || 0) +
@@ -1405,7 +1427,8 @@ function CompletedPayments() {
                         {displayingShipperInfo?.product_type || "N/A"}
                       </p>
                       <p>
-                        <span className="font-semibold">Price Per KG:</span> ₦{" "}
+                        <span className="font-semibold">Price Per KG:</span>{" "}
+                        {IsCanada ? "$" : "₦"}{" "}
                         {Number(
                           displayingShipperInfo?.product_type_price
                         )?.toLocaleString() || "N/A"}
