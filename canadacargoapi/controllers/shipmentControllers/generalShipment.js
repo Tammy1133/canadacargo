@@ -2113,6 +2113,7 @@ const updateItemStatusToArrived = async (req, res) => {
         }
       );
 
+
       const [shipmentLogs] = await sequelize.query(
         `SELECT logs FROM shipment_info WHERE trans_id = :trans_id`,
         {

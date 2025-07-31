@@ -816,14 +816,28 @@ function PendingWeighments() {
                       Weight:
                       <input
                         type="number"
-                        value={item.weight}
-                        readOnly
+                        value={item.weight === 0 ? "" : item.weight}
+                        onChange={(e) => {
+                          const inputValue = e.target.value;
+
+                          const updatedWeighments = [
+                            ...displayingShipperInfo.items,
+                          ];
+
+                          updatedWeighments[index].weight =
+                            inputValue === "" ? 0 : Number(inputValue);
+
+                          setDisplayingShipperInfo({
+                            ...displayingShipperInfo,
+                            items: updatedWeighments,
+                          });
+                        }}
                         className="border rounded p-1 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none"
                       />
                     </label>
 
                     <div className="flex space-x-2 mt-2">
-                      <button
+                      {/* <button
                         onClick={async () => {
                           const scaleWeight = await readFromScale();
 
@@ -859,7 +873,7 @@ function PendingWeighments() {
                         className="btn btn-sm btn-primary"
                       >
                         Weigh
-                      </button>
+                      </button> */}
                       <button
                         onClick={() => removeItem(item.name)}
                         className="btn btn-sm btn-danger"
