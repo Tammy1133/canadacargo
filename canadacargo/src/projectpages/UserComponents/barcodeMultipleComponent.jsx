@@ -52,22 +52,30 @@ const QRCodeMultipleComponent = ({ barcodeValues, displayingShipperInfo }) => {
 
   function getNextFridayDate(dateString) {
     const date = new Date(dateString);
-
-    // Get the day of the week (0 = Sunday, 5 = Friday)
     const dayOfWeek = date.getDay();
-    const daysUntilFriday = (5 - dayOfWeek + 7) % 7; // Days to add to get to Friday
 
-    // If today is Friday, daysUntilFriday will be 0
-    if (daysUntilFriday !== 0) {
-      date.setDate(date.getDate() + daysUntilFriday);
+    let daysToAdjust;
+
+    if (dayOfWeek === 6) {
+      // Saturday → go back 1 day to Friday
+      daysToAdjust = -1;
+    } else if (dayOfWeek === 0) {
+      // Sunday → go back 2 days to Friday
+      daysToAdjust = -2;
+    } else if (dayOfWeek !== 5) {
+      // Not Friday → go forward to next Friday
+      daysToAdjust = (5 - dayOfWeek + 7) % 7;
+    } else {
+      daysToAdjust = 0; // It's already Friday
     }
+
+    date.setDate(date.getDate() + daysToAdjust);
 
     const day = date.getDate();
     const month = date
       .toLocaleString("en-US", { month: "short" })
       .toUpperCase();
 
-    // Format ordinal (1ST, 2ND, 3RD, etc.)
     const getOrdinal = (n) => {
       if (n >= 11 && n <= 13) return `${n}TH`;
       switch (n % 10) {

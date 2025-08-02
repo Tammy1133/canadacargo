@@ -28,6 +28,7 @@ export const OtherProvince = () => {
   const [activeTab, setActiveTab] = useState("actions");
   const [isLoading, setIsLoading] = useState("");
   const [idLoading, setIDLoading] = useState("");
+  const [shipmentLogs, setShipmentLogs] = useState([]);
 
   console.log(shipmentInfo);
 
@@ -75,6 +76,19 @@ export const OtherProvince = () => {
       // throw new Error("");
 
       setShipmentInfo(response.data.shipmentInfo);
+
+      const rawLogs = response.data.shipmentInfo?.logs;
+
+      const parsedLogs = rawLogs ? JSON.parse(rawLogs) : {};
+      const formattedLogs = Object.entries(parsedLogs).map(([key, time]) => ({
+        description: key
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (l) => l.toUpperCase()),
+        time: time,
+      }));
+
+      setShipmentLogs(formattedLogs);
+
       setShipmentItems(response.data.shipmentItems);
 
       setLoggedIn(true);
@@ -311,7 +325,7 @@ export const OtherProvince = () => {
 
               {/* Tab Navigation */}
 
-              <div className="mt-4 flex space-x-4 border-b pb-3">
+              <div className="mt-4 flex space-x-4 border-b pb-3 !uppercase">
                 <button
                   className={`${
                     activeTab === "actions" ? "text-blue-600" : "text-gray-600"
@@ -337,6 +351,14 @@ export const OtherProvince = () => {
                   onClick={() => setActiveTab("items")}
                 >
                   Items
+                </button>
+                <button
+                  className={`${
+                    activeTab === "logs" ? "text-blue-600" : "text-gray-600"
+                  } hover:text-blue-600`}
+                  onClick={() => setActiveTab("logs")}
+                >
+                  Logs
                 </button>
               </div>
 
@@ -474,16 +496,65 @@ export const OtherProvince = () => {
               {/* Tab Content */}
               <div className="mt-6">
                 {activeTab === "shipmentDetails" && (
-                  <div>
+                  <div className="mt-6 space-y-6">
+                    {/* Shipper Information */}
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-700">
+                        Shipper Information
+                      </h3>
+                      <div className="mt-2 text-gray-600 space-y-2">
+                        <p>
+                          <span className="font-semibold">Name:</span>{" "}
+                          {shipmentInfo?.shipper_name || "N/A"}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Phone:</span>{" "}
+                          {shipmentInfo?.shipper_phone || "N/A"}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Address:</span>{" "}
+                          {shipmentInfo?.shipper_address || "N/A"}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Email:</span>{" "}
+                          {shipmentInfo?.shipper_email || "N/A"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Receiver Information */}
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-700">
+                        Receiver Information
+                      </h3>
+                      <div className="mt-2 text-gray-600 space-y-2">
+                        <p>
+                          <span className="font-semibold">Name:</span>{" "}
+                          {shipmentInfo?.receiver_name || "N/A"}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Phone:</span>{" "}
+                          {shipmentInfo?.receiver_phone || "N/A"}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Address:</span>{" "}
+                          {shipmentInfo?.receiver_address || "N/A"}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Email:</span>{" "}
+                          {shipmentInfo?.receiver_email || "N/A"}
+                        </p>
+                      </div>
+                    </div>
+
                     <h3 className="text-lg font-semibold text-gray-700">
-                      Shipment Details
+                      Other Information
                     </h3>
                     <div className="mt-2 text-gray-600 space-y-2">
                       <p>
                         <span className="font-semibold">Shipment Type:</span>{" "}
                         {shipmentInfo?.shipment_type || "N/A"}
                       </p>
-
                       <p>
                         <span className="font-semibold">Courier:</span>{" "}
                         {shipmentInfo?.courier || "N/A"}
@@ -519,6 +590,7 @@ export const OtherProvince = () => {
                         {shipmentInfo?.comments || "No Description provided."}
                       </p>
                     </div>
+
                     <div>
                       <h3 className="text-lg mt-4 font-semibold text-gray-700">
                         Province
@@ -573,6 +645,42 @@ export const OtherProvince = () => {
                         </tbody>
                       </table>
                     </div>
+                  </div>
+                )}
+
+                {activeTab === "logs" && (
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold text-gray-700 mb-4">
+                      Shipment Logs
+                    </h3>
+                    {shipmentLogs.length > 0 ? (
+                      <ul className="space-y-4">
+                        {shipmentLogs.map((log, index) => {
+                          const hasTime = !!log.time;
+                          return (
+                            <li
+                              key={index}
+                              className={`p-4 rounded-md shadow-sm border-l-4 ${
+                                hasTime
+                                  ? "bg-green-100 border-green-500"
+                                  : "bg-gray-100 border-gray-300"
+                              }`}
+                            >
+                              <p className="text-sm font-medium text-gray-700">
+                                {log.description}
+                              </p>
+                              {hasTime && (
+                                <p className="text-xs text-gray-600">
+                                  {new Date(log.time).toLocaleString()}
+                                </p>
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : (
+                      <p className="text-gray-500">No logs available.</p>
+                    )}
                   </div>
                 )}
               </div>

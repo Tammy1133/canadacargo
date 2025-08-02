@@ -19,8 +19,6 @@ export const TrackShipment = () => {
   const [address, setAddress] = useState("");
   const [activeTab, setActiveTab] = useState("shipmentDetails");
 
-  console.log(shipmentItems);
-
   const provincesAndTerritories = [
     "Alberta",
     "British Columbia",
