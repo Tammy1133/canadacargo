@@ -477,7 +477,7 @@ function PaymentResponse() {
     try {
       setsendloading(true);
 
-      console.log({ trans_id, amount, items });
+      // console.log({ trans_id, amount, items });
 
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/completePayment`,
@@ -717,7 +717,7 @@ function PaymentResponse() {
                           <button
                             className="btn btn-sm btn-primary bg-blue-600"
                             onClick={() => {
-                              console.log(l);
+                              // console.log(l);
                               viewShipmentInfo(l);
                             }}
                           >

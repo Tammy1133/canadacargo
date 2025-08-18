@@ -76,7 +76,7 @@ export const AddNewShipment = () => {
           },
         }
       );
-      console.log(response.data);
+      // console.log(response.data);
 
       setShipmentTypes(response.data.couriers);
     } catch (error) {

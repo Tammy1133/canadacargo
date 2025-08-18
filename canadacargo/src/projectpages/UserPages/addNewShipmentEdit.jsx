@@ -47,7 +47,7 @@ function AllShipmentsEdit() {
   };
 
   const applySearch = (mysearchText) => {
-    console.log(mysearchText);
+    // console.log(mysearchText);
 
     if (!mysearchText) {
       setTrans(allTrans);
@@ -120,12 +120,12 @@ function AllShipmentsEdit() {
             <td style="border: 1px solid #ddd; padding: 8px;">${
               IsCanada ? "$" : "₦"
             } ${Number(calculations?.shippingRate)?.toLocaleString()}</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">${IsCanada ? "$" : "₦"} ${Number(
-              calculations?.itemFee
-            )?.toLocaleString()}</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">${IsCanada ? "$" : "₦"} ${Number(
-              calculations?.totalSum
-            )?.toLocaleString()}</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">${
+              IsCanada ? "$" : "₦"
+            } ${Number(calculations?.itemFee)?.toLocaleString()}</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">${
+              IsCanada ? "$" : "₦"
+            } ${Number(calculations?.totalSum)?.toLocaleString()}</td>
           </tr>`
           )
           .join("")}
@@ -210,7 +210,7 @@ function AllShipmentsEdit() {
         }
       );
 
-      console.log(response.data.data);
+      // console.log(response.data.data);
 
       setAllTrans(response.data.data);
       setTrans(response.data.data);
@@ -230,7 +230,7 @@ function AllShipmentsEdit() {
     try {
       setsendloading(true);
 
-      console.log({ trans_id, amount, items });
+      // console.log({ trans_id, amount, items });
 
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/completePayment`,
@@ -302,7 +302,7 @@ function AllShipmentsEdit() {
     };
   }
 
-  console.log(displayingShipperInfo?.status?.toUpperCase());
+  // console.log(displayingShipperInfo?.status?.toUpperCase());
 
   return (
     userToken && (
@@ -444,9 +444,9 @@ function AllShipmentsEdit() {
                           <button
                             className="btn btn-sm btn-accent text-white bg-green-600 ml-1"
                             onClick={() => {
-                              console.log(
-                                trans.find((t) => t.trans_id === l.trans_id)
-                              );
+                              // console.log(
+                              //   trans.find((t) => t.trans_id === l.trans_id)
+                              // );
 
                               handleProcessClick(
                                 trans.find((t) => t.trans_id === l.trans_id)

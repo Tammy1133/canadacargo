@@ -202,7 +202,7 @@ function AllShipments() {
         }
       );
 
-      console.log(response.data.data);
+      // console.log(response.data.data);
 
       // Set the state with the response data
       setTrans(response.data.data);
@@ -222,7 +222,7 @@ function AllShipments() {
     try {
       setsendloading(true);
 
-      console.log({ trans_id, amount, items });
+      // console.log({ trans_id, amount, items });
 
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/completePayment`,
@@ -432,9 +432,9 @@ function AllShipments() {
                           <button
                             className="btn btn-sm btn-accent text-white bg-green-600 ml-1"
                             onClick={() => {
-                              console.log(
-                                trans.find((t) => t.trans_id === l.trans_id)
-                              );
+                              // console.log(
+                              //   trans.find((t) => t.trans_id === l.trans_id)
+                              // );
 
                               handleProcessClick(
                                 trans.find((t) => t.trans_id === l.trans_id)

@@ -295,7 +295,7 @@ function MarkInTransit() {
 
       // If the user clicked "Cancel", stop the process
       if (!confirmResult.isConfirmed) {
-        console.log("User canceled the update");
+        // console.log("User canceled the update");
         setsendloading(false);
 
         return; // Exit function without updating
@@ -377,7 +377,7 @@ function MarkInTransit() {
 
       // If the user clicked "Cancel", stop the process
       if (!confirmResult.isConfirmed) {
-        console.log("User cancelled the update");
+        // console.log("User cancelled the update");
         return; // Do nothing and exit the function
       }
 
@@ -429,7 +429,7 @@ function MarkInTransit() {
       );
 
       // Log full error to inspect what went wrong
-      console.log("Error details:", error);
+      // console.log("Error details:", error);
 
       // Show error alert with more details
       Swal.fire({
@@ -652,9 +652,9 @@ function MarkInTransit() {
           </div>
         </TitleCard>
 
-        {isModalOpen && ( // Modal rendering
+        {isModalOpen && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto"
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
             onClick={() => setIsModalOpen(false)}
           >
             <div className="flex justify-center items-center h-screen mt-[40px]">
@@ -708,7 +708,7 @@ function MarkInTransit() {
 
         {processModalShowing && (
           <div
-            className="fixed inset-0  bg-black bg-opacity-50 overflow-y-auto"
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
             onClick={() => {
               setprocessModalShowing(false);
             }}
@@ -721,7 +721,7 @@ function MarkInTransit() {
                 }}
               >
                 <h2 className="text-lg font-bold mb-4">
-                  Enter Tracking number for{" "}
+                  Enter Tracking number for
                   {displayingShipperInfo?.shipper_name}
                 </h2>
 
@@ -809,7 +809,7 @@ function MarkInTransit() {
                         Enter Tracking number for {item.name}:
                         <input
                           type="text"
-                          value={trackingNumbers[item.item_trans_id] || ""} // Get the tracking number from state
+                          value={trackingNumbers[item.item_trans_id] || ""}
                           onChange={(e) =>
                             handleTrackingNumberChange(
                               item.item_trans_id,
@@ -856,7 +856,7 @@ function MarkInTransit() {
         )}
         {allprocessModalShowing && (
           <div
-            className="fixed inset-0  bg-black bg-opacity-50 overflow-y-auto"
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
             onClick={() => {
               setallprocessModalShowing(false);
             }}

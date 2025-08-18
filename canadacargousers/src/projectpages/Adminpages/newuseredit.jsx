@@ -78,9 +78,9 @@ export const NewUserEdit = () => {
     }));
   };
 
-  useEffect(() => {
-    console.log(selectedModules);
-  }, [selectedModules]);
+  // useEffect(() => {
+  //   console.log(selectedModules);
+  // }, [selectedModules]);
 
   const getUsers = () => {
     setsendloading(true);
@@ -280,7 +280,7 @@ export const NewUserEdit = () => {
 
         const user = userDataRef.current.find((u) => u.email === email);
 
-        console.log(user);
+        // console.log(user);
 
         if (user) {
           deleteUser(user?.email);

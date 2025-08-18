@@ -28,6 +28,8 @@ import { IsCanada } from "../../utils/globalConstantUtil";
 function CompletedPaymentsTable() {
   const [trans, setTrans] = useState([]);
 
+  // alert("dkdd");
+
   useEffect(() => {
     const updatedTrans = trans.map((t) => ({
       ...t,
@@ -349,7 +351,7 @@ function CompletedPaymentsTable() {
         }
       );
 
-      console.log(response.data.data);
+      // console.log(response.data.data);
 
       setTrans(response.data.data);
 
@@ -414,7 +416,7 @@ function CompletedPaymentsTable() {
     try {
       setsendloading(true);
 
-      console.log({ trans_id, amount, items });
+      // console.log({ trans_id, amount, items });
 
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/completePayment`,
@@ -630,7 +632,7 @@ function CompletedPaymentsTable() {
                           <button
                             className="btn btn-sm btn-primary bg-blue-600"
                             onClick={() => {
-                              console.log(l);
+                              // console.log(l);
                               viewShipmentInfo(l);
                             }}
                           >

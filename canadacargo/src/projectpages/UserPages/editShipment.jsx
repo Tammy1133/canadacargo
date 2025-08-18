@@ -73,7 +73,7 @@ export const EditShipment = () => {
           },
         }
       );
-      console.log(response.data);
+      // console.log(response.data);
 
       setShipmentTypes(response.data.couriers);
     } catch (error) {
@@ -272,7 +272,7 @@ export const EditShipment = () => {
         }
       );
 
-      console.log(response);
+      // console.log(response);
 
       const allData = response.data.data.shipmentInfo;
       if (allData) {
@@ -310,7 +310,7 @@ export const EditShipment = () => {
     }
   };
   useEffect(() => {
-    console.log(params);
+    // console.log(params);
 
     if (params?.id) {
       getShipmentInfoByTransId();
@@ -326,7 +326,6 @@ export const EditShipment = () => {
     getAllPaymentModes();
     getAllDestinations();
   }, []);
-  
 
   return (
     <div className="p-5">

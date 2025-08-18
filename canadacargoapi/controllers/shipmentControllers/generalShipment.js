@@ -1064,22 +1064,24 @@ const completePayment = async (req, res) => {
       },
     ];
 
-    await Promise.all([
-      transporter.sendMail({
-        from: '"Canada Cargo" <info@canadacargo.net>',
-        to: shipmentInfo.shipper_email,
-        subject: emailSubject,
-        html: emailBody,
-        attachments: emailAttachments,
-      }),
-      transporter.sendMail({
-        from: '"Canada Cargo" <info@canadacargo.net>',
-        to: shipmentInfo.receiver_email,
-        subject: emailSubject,
-        html: emailBody,
-        attachments: emailAttachments,
-      }),
-    ]);
+ Promise.all([
+  transporter.sendMail({
+    from: '"Canada Cargo" <info@canadacargo.net>',
+    to: shipmentInfo.shipper_email,
+    subject: emailSubject,
+    html: emailBody,
+    attachments: emailAttachments,
+  }),
+  transporter.sendMail({
+    from: '"Canada Cargo" <info@canadacargo.net>',
+    to: shipmentInfo.receiver_email,
+    subject: emailSubject,
+    html: emailBody,
+    attachments: emailAttachments,
+  }),
+]).catch((err) => {
+  console.error("Error sending email(s):", err);
+});
 
     try {
       await Promise.all([
@@ -1324,7 +1326,7 @@ const getCompletedPayments = async (req, res) => {
 
 const getShipmentItems = async (req, res) => {
   const { start_date, end_date, status } = req.query;
-  const location = req.user.location; // Extract location from authenticated user
+  const location = req.user.location;   
 
   try {
     const currentDate = new Date().toISOString().split("T")[0];
@@ -2113,6 +2115,7 @@ const updateItemStatusToArrived = async (req, res) => {
         }
       );
 
+
       const [shipmentLogs] = await sequelize.query(
         `SELECT logs FROM shipment_info WHERE trans_id = :trans_id`,
         {
@@ -2347,7 +2350,7 @@ const sendArrivalNotification = async (req, res) => {
       ],
     };
 
-    await transporter.sendMail(mailOptions);
+     transporter.sendMail(mailOptions);
 
     return res.status(200).json({ message: "Email sent successfully" });
   } catch (error) {
@@ -2355,6 +2358,8 @@ const sendArrivalNotification = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
 const sendArrivalNotifications = async (req, res) => {
   const { notifications } = req.body;
 
@@ -2397,9 +2402,9 @@ const sendArrivalNotifications = async (req, res) => {
 
       const isCanada = origin?.toUpperCase() === "CANADA";
 
-      // Query item statuses
+      // Query item statuses and box numbers
       const [itemStatuses] = await sequelize.query(
-        `SELECT status, COUNT(*) AS count FROM shipment_items WHERE trans_id = :trans_id GROUP BY status`,
+        `SELECT status, COUNT(*) AS count, GROUP_CONCAT(box_number) AS box_numbers FROM shipment_items WHERE trans_id = :trans_id GROUP BY status`,
         { replacements: { trans_id } }
       );
 
@@ -2413,6 +2418,7 @@ const sendArrivalNotifications = async (req, res) => {
 
       let arrived = 0;
       let notArrived = 0;
+      let arrivedBoxNumbers = [];
 
       itemStatuses.forEach((item) => {
         const status = item.status.toLowerCase();
@@ -2420,12 +2426,15 @@ const sendArrivalNotifications = async (req, res) => {
 
         if (status === "arrived") {
           arrived += count;
+          if (item.box_numbers) {
+            arrivedBoxNumbers = item.box_numbers.split(",");
+          }
         } else if (status !== "delivered") {
           notArrived += count;
         }
       });
 
-      const statusSummary = `${arrived} Arrived, ${notArrived} Not Arrived`;
+      const statusSummary = `${arrived} Arrived (Box Numbers: ${arrivedBoxNumbers.length > 0 ? arrivedBoxNumbers.join(", ") : "None"}), ${notArrived} Not Arrived`;
 
       let clearingFeeValue = 0;
       if (!isCanada) {
@@ -2523,6 +2532,20 @@ const sendArrivalNotifications = async (req, res) => {
                 <strong>Item Status Summary:</strong> ${statusSummary}
               </p>
 
+              <p style="font-size: 16px; margin-bottom: 20px">
+                <strong>Tracking Number:</strong>
+                <span style="font-size: 18px; font-weight: bold; color: #007bff">${trans_id}</span>
+              </p>
+
+              <p style="font-size: 16px; margin-bottom: 20px">
+                Track your shipment using the link below:<br/>
+                <a
+                  href="https://tracking.canadacargo.net/trackshipment/${trans_id}"
+                  target="_blank"
+                  style="color: #007bff; font-weight: bold; text-decoration: none;">
+                  Track your shipment here</a>
+              </p>
+
               ${
                 isCanada
                   ? ""
@@ -2564,20 +2587,6 @@ const sendArrivalNotifications = async (req, res) => {
               }
 
               <p style="font-size: 16px; margin-bottom: 20px">
-                <strong>Tracking Number:</strong>
-                <span style="font-size: 18px; font-weight: bold; color: #007bff">${trans_id}</span>
-              </p>
-
-              <p style="font-size: 16px; margin-bottom: 20px">
-                Track your shipment using the link below:<br/>
-                <a
-                  href="https://tracking.canadacargo.net/trackshipment/${trans_id}"
-                  target="_blank"
-                  style="color: #007bff; font-weight: bold; text-decoration: none;">
-                  Track your shipment here</a>
-              </p>
-
-              <p style="font-size: 16px; margin-bottom: 20px">
                 <strong>Contact Information:</strong><br/>
                 ${contactInfo.address}<br/>
                 ${contactInfo.phoneNumbers
@@ -2609,7 +2618,7 @@ const sendArrivalNotifications = async (req, res) => {
       };
 
       // Send email
-      await transporter.sendMail(mailOptions);
+       transporter.sendMail(mailOptions);
       successes.push({
         trans_id,
         message: "Email sent successfully",
@@ -2648,6 +2657,301 @@ const sendArrivalNotifications = async (req, res) => {
     errors,
   });
 };
+
+// const sendArrivalNotifications = async (req, res) => {
+//   const { notifications } = req.body;
+
+//   if (!Array.isArray(notifications) || notifications.length === 0) {
+//     return res.status(400).json({
+//       message: "Notifications array is required and must not be empty",
+//       errors: [{ message: "Invalid input" }],
+//       successes: [],
+//     });
+//   }
+
+//   const errors = [];
+//   const successes = [];
+
+//   for (const notification of notifications) {
+//     const { receiverEmail, trans_id } = notification;
+
+//     if (!receiverEmail || receiverEmail.trim() === "") {
+//       errors.push({ trans_id, message: "Receiver email is required" });
+//       continue;
+//     }
+//     if (!trans_id || trans_id.trim() === "") {
+//       errors.push({ trans_id, message: "Transaction ID is required" });
+//       continue;
+//     }
+
+//     try {
+//       const [shipmentInfo] = await sequelize.query(
+//         `SELECT shipper_name, receiver_name, province, origin, destination FROM shipment_info WHERE trans_id = :trans_id`,
+//         { replacements: { trans_id } }
+//       );
+
+//       if (!shipmentInfo || shipmentInfo.length === 0) {
+//         errors.push({ trans_id, message: "Shipment information not found" });
+//         continue;
+//       }
+
+//       const { shipper_name, receiver_name, province, origin, destination } =
+//         shipmentInfo[0];
+
+//       const isCanada = origin?.toUpperCase() === "CANADA";
+
+//       // Query item statuses
+//       const [itemStatuses] = await sequelize.query(
+//         `SELECT status, COUNT(*) AS count FROM shipment_items WHERE trans_id = :trans_id GROUP BY status`,
+//         { replacements: { trans_id } }
+//       );
+
+//       if (!itemStatuses || itemStatuses.length === 0) {
+//         errors.push({
+//           trans_id,
+//           message: "No items found for this transaction ID",
+//         });
+//         continue;
+//       }
+
+//       let arrived = 0;
+//       let notArrived = 0;
+
+//       itemStatuses.forEach((item) => {
+//         const status = item.status.toLowerCase();
+//         const count = parseInt(item.count);
+
+//         if (status === "arrived") {
+//           arrived += count;
+//         } else if (status !== "delivered") {
+//           notArrived += count;
+//         }
+//       });
+
+//       const statusSummary = `${arrived} Arrived, ${notArrived} Not Arrived`;
+
+//       let clearingFeeValue = 0;
+//       if (!isCanada) {
+//         // Query items
+//         const [items] = await sequelize.query(
+//           `SELECT * FROM shipment_items WHERE trans_id = :trans_id`,
+//           { replacements: { trans_id } }
+//         );
+
+//         // Query clearing fees
+//         const clearingFeeQuery = await sequelize.query(
+//           `SELECT oldrate, newrate FROM conf_clearing_fee ORDER BY date DESC LIMIT 1`,
+//           { type: sequelize.QueryTypes.SELECT }
+//         );
+//         const clearingFeeTaxQuery = await sequelize.query(
+//           `SELECT oldrate, newrate FROM conf_clearing_tax ORDER BY date DESC LIMIT 1`,
+//           { type: sequelize.QueryTypes.SELECT }
+//         );
+
+//         if (!clearingFeeQuery[0] || !clearingFeeTaxQuery[0]) {
+//           errors.push({
+//             trans_id,
+//             message: "Failed to fetch clearing fee information",
+//           });
+//           continue;
+//         }
+
+//         let clearingFee = clearingFeeQuery[0]?.newrate;
+//         let clearingFeeTax = clearingFeeTaxQuery[0]?.newrate;
+
+//         const totalArrivedItems = items.filter(
+//           (item) => item.status === "Arrived"
+//         );
+//         const totalWeight = totalArrivedItems.reduce(
+//           (sum, item) => sum + parseFloat(item.weight || 0),
+//           0
+//         );
+
+//         const baseFee = 10;
+//         const fee =
+//           Number(totalWeight) <= 10
+//             ? baseFee
+//             : Number(totalWeight) * Number(clearingFee);
+//         clearingFeeValue = fee + (Number(clearingFeeTax) / 100) * fee;
+
+//         // Update customs fee
+//         await sequelize.query(
+//           `UPDATE shipment_info SET customs_fee = :clearingFeeValue WHERE trans_id = :trans_id`,
+//           {
+//             replacements: { clearingFeeValue, trans_id },
+//           }
+//         );
+//       }
+
+//       const logoPath = path.join(__dirname, "logo.png");
+
+//       // Configure contact information based on isCanada
+//       const contactInfo = isCanada
+//         ? {
+//             address:
+//               "28, Stella Sholanke Street, Ajao Estate, By Stop Over hotel",
+//             phoneNumbers: [
+//               "+234 904 404 9709",
+//               "+234 913 401 7435",
+//               "+234 816 375 6150",
+//             ],
+//           }
+//         : {
+//             address: "Unit 212, 1885 Clement Road, Pickering, Ontario, L1W 3V4",
+//             phoneNumbers: [
+//               "+1 647 916 9511",
+//               "+1 289 660 0515",
+//               "+1 647 773 9511",
+//             ],
+//           };
+
+//       // Configure email options
+//       const mailOptions = {
+//         from: '"Canada Cargo" <info@canadacargo.net>',
+//         to: `${receiverEmail}`,
+//         subject: `Item Ready for Pickup - ${trans_id}`,
+//         html: `
+//           <div style="width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff69; border-radius: 8px; font-family: Arial, sans-serif; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.044);">
+//             <div style="text-align: center; padding: 20px; background-color: #007bff1f; border-radius: 8px 8px 0 0;">
+//               <img src="cid:logo" alt="Canada Cargo Logo" style="max-width: 180px; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;"/>
+//             </div>
+//             <div style="padding: 20px; color: #333; line-height: 1.6; background-color: #f9f9f93f; border-radius: 0 0 8px 8px;">
+//               <p style="font-size: 16px; margin-bottom: 20px">Dear ${receiver_name},</p>
+      
+//               <p style="font-size: 16px; margin-bottom: 20px">
+//                 Your shipments from ${origin} has arrived in ${destination}
+//               </p>
+
+//               <p style="font-size: 16px; margin-bottom: 20px">
+//                 <strong>Item Status Summary:</strong> ${statusSummary}
+//               </p>
+
+//               <p style="font-size: 16px; margin-bottom: 20px">
+//                 <strong>Tracking Number:</strong>
+//                 <span style="font-size: 18px; font-weight: bold; color: #007bff">${trans_id}</span>
+//               </p>
+
+//               ${
+//                 isCanada
+//                   ? ""
+//                   : `
+//               <p style="font-size: 16px; margin-bottom: 20px">
+//                 Your customs clearing fees are <strong>$${clearingFeeValue}</strong>. This fee applies only to the items that have arrived.
+//               </p>
+
+//               ${
+//                 province?.toLowerCase() !== "ontario"
+//                   ? `
+//               <p style="font-size: 16px; margin-bottom: 20px">
+//                 Outside Ontario locations:<br/>
+//                 <a
+//                   href="https://tracking.canadacargo.net/otherprovince/${trans_id}"
+//                   target="_blank"
+//                   style="color: #007bff; font-weight: bold; text-decoration: none;">
+//                   Click here to send your items Outside Ontario</a>
+//               </p>`
+//                   : `
+//              <p style="margin-top:15px;font-size:16px;">
+//             All payments to <strong>AZEEZ@CANADACARGO.NET</strong>
+//           </p>
+//               <a
+//                 href="https://tracking.canadacargo.net/confirmpayment/${trans_id}"
+//                 target="_blank"
+//                 style="color: #007bff; font-weight: bold; text-decoration: none;">
+//                 After making the payment, click this link to notify us 
+//               </a>
+
+//               <p style="font-size: 16px; margin-bottom: 20px">
+//                 Pick up can be done at:<br/>
+//                 <strong>Unit 212, 1885 Clements Road, Pickering, Ontario, L1W 3V4</strong><br/>
+//                 <strong>Hours of operation:</strong><br/>
+//                 Monday to Friday: 10 AM - 7 PM<br/>
+//                 Saturday: 12 Noon - 3 PM
+//               </p>`
+//               }`
+//               }
+
+//               <p style="font-size: 16px; margin-bottom: 20px">
+//                 Track your shipment using the link below:<br/>
+//                 <a
+//                   href="https://tracking.canadacargo.net/trackshipment/${trans_id}"
+//                   target="_blank"
+//                   style="color: #007bff; font-weight: bold; text-decoration: none;">
+//                   Track your shipment here</a>
+//               </p>
+
+//               <p style="font-size: 16px; margin-bottom: 20px">
+//                 <strong>Contact Information:</strong><br/>
+//                 ${contactInfo.address}<br/>
+//                 ${contactInfo.phoneNumbers
+//                   .map((num) => `<strong>${num}</strong>`)
+//                   .join("<br/>")}
+//               </p>
+
+//               <p style="font-size: 16px; margin-top: 20px">
+//                 Thank you for choosing Canada Cargo!
+//               </p>
+//             </div>
+
+//             <div style="text-align: center; font-size: 14px; color: #888; padding: 10px; background-color: #f4f4f4; border-radius: 0 0 8px 8px;">
+//               <p style="margin: 0">
+//                 Canada Cargo |
+//                 <a href="www.canadacargo.net" style="color: #007bff">www.canadacargo.net</a>
+//               </p>
+//               <p style="margin: 0">© 2025 Canada Cargo. All Rights Reserved.</p>
+//             </div>
+//           </div>
+//         `,
+//         attachments: [
+//           {
+//             filename: "logo.png",
+//             path: logoPath,
+//             cid: "logo",
+//           },
+//         ],
+//       };
+
+//       // Send email
+//       await transporter.sendMail(mailOptions);
+//       successes.push({
+//         trans_id,
+//         message: "Email sent successfully",
+//         statusSummary,
+//       });
+//     } catch (error) {
+//       console.error(
+//         `Error processing notification for trans_id ${trans_id}:`,
+//         error
+//       );
+//       errors.push({
+//         trans_id,
+//         message: error.message || "Failed to process notification",
+//       });
+//     }
+//   }
+
+//   // Determine appropriate status code based on results
+//   if (successes.length === 0 && errors.length > 0) {
+//     return res.status(500).json({
+//       message: "Failed to process any notifications",
+//       successes,
+//       errors,
+//     });
+//   } else if (errors.length > 0) {
+//     return res.status(207).json({
+//       message: "Processed notifications with some errors",
+//       successes,
+//       errors,
+//     });
+//   }
+
+//   return res.status(200).json({
+//     message: "Processed all notifications successfully",
+//     successes,
+//     errors,
+//   });
+// };
+
 const updateItemStatusToDelivered = async (req, res) => {
   const { item_trans_id, senderEmail, receiverEmail } = req.body;
 
@@ -3218,7 +3522,7 @@ const updateMultipleItemsTrackingAndStatus = async (req, res) => {
           ],
         };
 
-        await transporter.sendMail(mailOptions);
+         transporter.sendMail(mailOptions);
       }
 
       // Commit transaction
@@ -3358,15 +3662,19 @@ const getItemsInTransit = async (req, res) => {
   try {
     const { origin, destination, startdate, enddate } = req.query;
 
-    // Fetch all items in transit (no filtering here)
     const rawItems = await sequelize.query(
-      `SELECT item_trans_id, 
-              (SELECT trans_id FROM shipment_items WHERE item_trans_id = items_intransit.item_trans_id LIMIT 1) as trans_id
-       FROM items_intransit`,
+      `SELECT 
+        items_intransit.item_trans_id,
+        si.trans_id,
+        si.tracking_number
+      FROM items_intransit
+      LEFT JOIN shipment_items si ON si.item_trans_id = items_intransit.item_trans_id`,
       {
         type: sequelize.QueryTypes.SELECT,
       }
     );
+
+    
 
     if (rawItems.length === 0) {
       return res.status(404).json({
@@ -3434,7 +3742,7 @@ const getItemsInTransit = async (req, res) => {
         }
 
         const items = await sequelize.query(
-          `SELECT trans_id, name, type, weight, status, item_trans_id, box_number
+          `SELECT trans_id, name, type, weight, status, item_trans_id, box_number, tracking_number
            FROM shipment_items 
            WHERE trans_id = :trans_id`,
           {
@@ -3949,7 +4257,7 @@ const createArrivalResponse = async (req, res) => {
         <p>You can also see the information on your dashboard.</p>
       </div>`;
 
-    await transporter.sendMail({
+     transporter.sendMail({
       from: "info@canadacargo.net",
       // to: "info@canadacargo.net",
       to: "canadacargobackup@gmail.com",
@@ -4038,7 +4346,7 @@ const createPaymentResponse = async (req, res) => {
         <p>You can also review this information on your dashboard.</p>
       </div>`;
 
-    await transporter.sendMail({
+     transporter.sendMail({
       from: "info@canadacargo.net",
       to: "info@canadacargo.net",
       subject: emailSubject,
@@ -4357,7 +4665,7 @@ const sendTrackingNotification = async (req, res) => {
       ],
     };
 
-    await transporter.sendMail(mailOptions);
+    transporter.sendMail(mailOptions);
 
     return res.status(200).json({ message: "Tracking updated and email sent" });
   } catch (err) {

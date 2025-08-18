@@ -39,6 +39,7 @@ function CompletedPayments() {
   const [originalTrans, setOriginalTrans] = useState([]);
 
   const [qrCodes, setQrCodes] = useState({});
+  const [activePDF, setActivePDF] = useState(null);
 
   useEffect(() => {
     async function generateQrCodes() {
@@ -413,7 +414,7 @@ function CompletedPayments() {
         }
       );
 
-      console.log(response.data.data);
+      // console.log(response.data.data);
 
       setTrans(response.data.data);
 
@@ -478,7 +479,7 @@ function CompletedPayments() {
     try {
       setsendloading(true);
 
-      console.log({ trans_id, amount, items });
+      // console.log({ trans_id, amount, items });
 
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/completePayment`,
@@ -931,7 +932,7 @@ function CompletedPayments() {
                           <button
                             className="btn btn-sm btn-primary bg-blue-600"
                             onClick={() => {
-                              console.log(l);
+                              // console.log(l);
                               viewShipmentInfo(l);
                             }}
                           >
@@ -950,41 +951,42 @@ function CompletedPayments() {
                             <ArrowsRightLeftIcon className="text-white text-2xl h-6 w-6"></ArrowsRightLeftIcon>
                           </button> */}
 
-                          <PDFDownloadLink
-                            fileName={`${l.shipper_name}_invoice.pdf`}
-                            className="btn btn-sm btn-black text-white bg-slate-600 hover:bg-slate-900 transition-all"
-                            document={
-                              <Document>
-                                <Page size="A4" style={styles.page}>
-                                  {/* Header Section */}
-                                  <View style={styles.header}>
-                                    <Image
-                                      style={styles.logo}
-                                      src="/images/canadalogo.png" // Replace with your logo URL
-                                    />
+                          {activePDF === l.trans_id ? (
+                            <PDFDownloadLink
+                              fileName={`${l.shipper_name}_invoice.pdf`}
+                              className="btn btn-sm btn-black text-white bg-green-600 hover:bg-slate-900 transition-all"
+                              document={
+                                <Document>
+                                  <Page size="A4" style={styles.page}>
+                                    {/* Header Section */}
+                                    <View style={styles.header}>
+                                      <Image
+                                        style={styles.logo}
+                                        src="/images/canadalogo.png" // Replace with your logo URL
+                                      />
 
-                                    <View style={styles.invoice}>
-                                      {/* <Image
-                                  style={styles.logo2}
-                                  src="/images/canadalogo.png" // Replace with your logo URL
-                                /> */}
+                                      <View style={styles.invoice}>
+                                        {/* <Image
+                                          style={styles.logo2}
+                                          src="/images/canadalogo.png" // Replace with your logo URL
+                                        /> */}
 
-                                      <br />
-                                      {qrCodes[l.trans_id] && (
-                                        <Image
-                                          style={{
-                                            width: 70,
-                                            height: 70,
-                                            marginTop: 5,
-                                          }}
-                                          src={qrCodes[l.trans_id]}
-                                        />
-                                      )}
+                                        <br />
+                                        {qrCodes[l.trans_id] && (
+                                          <Image
+                                            style={{
+                                              width: 70,
+                                              height: 70,
+                                              marginTop: 5,
+                                            }}
+                                            src={qrCodes[l.trans_id]}
+                                          />
+                                        )}
+                                      </View>
                                     </View>
-                                  </View>
 
-                                  <View style={styles.skyframe}>
-                                    {/* <View style={styles.skyblock}>
+                                    <View style={styles.skyframe}>
+                                      {/* <View style={styles.skyblock}>
                                 <Image
                                   style={styles.logo2}
                                   src="/images/paid.png" // Replace with your logo URL
@@ -994,339 +996,376 @@ function CompletedPayments() {
                                   src="/images/highvalue.jpg" // Replace with your logo URL
                                 />
                               </View> */}
-                                    <View style={styles.skyblock}>
-                                      <View style={styles.section}>
-                                        <Text style={styles.myhead}>
-                                          Payment Mode
+                                      <View style={styles.skyblock}>
+                                        <View style={styles.section}>
+                                          <Text style={styles.myhead}>
+                                            Payment Mode
+                                          </Text>
+                                          <Text style={styles.subtext}>
+                                            {l.payment_mode}
+                                          </Text>
+                                        </View>
+                                        <View style={styles.section}>
+                                          <Text style={styles.myhead}>
+                                            Invoice No..
+                                          </Text>
+                                          <Text style={styles.subtext}>
+                                            {l?.invoice_no}
+                                          </Text>
+                                        </View>
+                                        <View style={styles.section}>
+                                          <Text style={styles.myhead}>
+                                            Shipment Type
+                                          </Text>
+                                          <Text style={styles.subtext}>
+                                            {l?.product_type}
+                                          </Text>
+                                        </View>
+                                      </View>
+                                      <View style={styles.skyblock}>
+                                        <View style={styles.section}>
+                                          <Text style={styles.myhead}>
+                                            Date
+                                          </Text>
+                                          <Text style={styles.subtext}>
+                                            {new Date(
+                                              l?.date
+                                            )?.toLocaleString()}
+                                          </Text>
+                                        </View>
+                                        <View style={styles.section}>
+                                          <Text style={styles.myhead}>
+                                            Waybill No..
+                                          </Text>
+                                          <Text style={styles.subtext}>
+                                            {l.trans_id}
+                                          </Text>
+                                        </View>
+                                        <View style={styles.section}>
+                                          <Text style={styles.myhead}>
+                                            Prepared by
+                                          </Text>
+                                          <Text style={styles.subtext}>
+                                            {l?.prepared_by}
+                                          </Text>
+                                        </View>
+                                      </View>
+                                      <View style={styles.skyblock}>
+                                        <Image
+                                          style={styles.logo3}
+                                          src="/images/paid.png" // Replace with your logo URL
+                                        />
+                                      </View>
+                                    </View>
+
+                                    {/* Payment Information */}
+
+                                    {/* Shipper and Receiver Information */}
+                                    <View style={styles.row}>
+                                      <View style={styles.col}>
+                                        <Text style={styles.bold}>
+                                          SHIPPER INFORMATION
                                         </Text>
-                                        <Text style={styles.subtext}>
-                                          {l.payment_mode}
+                                        <Text style={styles.empty}></Text>
+                                        <Text style={styles.mytextt}>
+                                          Shipper Name: {l.shipper_name}
+                                        </Text>
+                                        <Text style={styles.empty2}></Text>
+
+                                        <Text style={styles.mytextt}>
+                                          Shipper Address: {l.shipper_address}
+                                        </Text>
+                                        <Text style={styles.empty2}></Text>
+
+                                        <Text style={styles.mytextt}>
+                                          Shipper Phone: {l.shipper_phone}
+                                        </Text>
+                                        <Text style={styles.empty2}></Text>
+
+                                        <Text style={styles.mytextt}>
+                                          Shipper Email: {l.shipper_email}
                                         </Text>
                                       </View>
-                                      <View style={styles.section}>
-                                        <Text style={styles.myhead}>
-                                          Invoice No..
+                                      <View style={styles.col}>
+                                        <Text style={styles.bold}>
+                                          RECEIVER INFORMATION
                                         </Text>
-                                        <Text style={styles.subtext}>
-                                          {l?.invoice_no}
+                                        <Text style={styles.empty}></Text>
+                                        <Text style={styles.mytextt}>
+                                          Receiver Name: {l.receiver_name}
                                         </Text>
-                                      </View>
-                                      <View style={styles.section}>
-                                        <Text style={styles.myhead}>
-                                          Shipment Type
+                                        <Text style={styles.empty2}></Text>
+
+                                        <Text style={styles.mytextt}>
+                                          Receiver Address: {l.receiver_address}
                                         </Text>
-                                        <Text style={styles.subtext}>
-                                          {l?.product_type}
+                                        <Text style={styles.empty2}></Text>
+
+                                        <Text style={styles.mytextt}>
+                                          Receiver Phone: {l.receiver_phone}
                                         </Text>
-                                      </View>
-                                    </View>
-                                    <View style={styles.skyblock}>
-                                      <View style={styles.section}>
-                                        <Text style={styles.myhead}>Date</Text>
-                                        <Text style={styles.subtext}>
-                                          {new Date(l?.date)?.toLocaleString()}
-                                        </Text>
-                                      </View>
-                                      <View style={styles.section}>
-                                        <Text style={styles.myhead}>
-                                          Waybill No..
-                                        </Text>
-                                        <Text style={styles.subtext}>
-                                          {l.trans_id}
-                                        </Text>
-                                      </View>
-                                      <View style={styles.section}>
-                                        <Text style={styles.myhead}>
-                                          Prepared by
-                                        </Text>
-                                        <Text style={styles.subtext}>
-                                          {l?.prepared_by}
+                                        <Text style={styles.empty2}></Text>
+
+                                        <Text style={styles.mytextt}>
+                                          Receiver Email: {l.receiver_email}
                                         </Text>
                                       </View>
                                     </View>
-                                    <View style={styles.skyblock}>
-                                      <Image
-                                        style={styles.logo3}
-                                        src="/images/paid.png" // Replace with your logo URL
-                                      />
-                                    </View>
-                                  </View>
 
-                                  {/* Payment Information */}
+                                    <Text style={styles.empty}></Text>
 
-                                  {/* Shipper and Receiver Information */}
-                                  <View style={styles.row}>
-                                    <View style={styles.col}>
-                                      <Text style={styles.bold}>
-                                        SHIPPER INFORMATION
-                                      </Text>
-                                      <Text style={styles.empty}></Text>
-                                      <Text style={styles.mytextt}>
-                                        Shipper Name: {l.shipper_name}
-                                      </Text>
-                                      <Text style={styles.empty2}></Text>
-
-                                      <Text style={styles.mytextt}>
-                                        Shipper Address: {l.shipper_address}
-                                      </Text>
-                                      <Text style={styles.empty2}></Text>
-
-                                      <Text style={styles.mytextt}>
-                                        Shipper Phone: {l.shipper_phone}
-                                      </Text>
-                                      <Text style={styles.empty2}></Text>
-
-                                      <Text style={styles.mytextt}>
-                                        Shipper Email: {l.shipper_email}
-                                      </Text>
-                                    </View>
-                                    <View style={styles.col}>
-                                      <Text style={styles.bold}>
-                                        RECEIVER INFORMATION
-                                      </Text>
-                                      <Text style={styles.empty}></Text>
-                                      <Text style={styles.mytextt}>
-                                        Receiver Name: {l.receiver_name}
-                                      </Text>
-                                      <Text style={styles.empty2}></Text>
-
-                                      <Text style={styles.mytextt}>
-                                        Receiver Address: {l.receiver_address}
-                                      </Text>
-                                      <Text style={styles.empty2}></Text>
-
-                                      <Text style={styles.mytextt}>
-                                        Receiver Phone: {l.receiver_phone}
-                                      </Text>
-                                      <Text style={styles.empty2}></Text>
-
-                                      <Text style={styles.mytextt}>
-                                        Receiver Email: {l.receiver_email}
-                                      </Text>
-                                    </View>
-                                  </View>
-
-                                  <Text style={styles.empty}></Text>
-
-                                  {/* Table Section */}
-                                  <View style={styles.table}>
-                                    <View style={styles.tableRow}>
-                                      <Text
-                                        style={[styles.tableCell, styles.bold]}
-                                      >
-                                        Weight (Kg)
-                                      </Text>
-                                      <Text
-                                        style={[styles.tableCell, styles.bold]}
-                                      >
-                                        Shipping Rate
-                                      </Text>
-                                      <Text
-                                        style={[styles.tableCell, styles.bold]}
-                                      >
-                                        Carton
-                                      </Text>
-                                      <Text
-                                        style={[styles.tableCell, styles.bold]}
-                                      >
-                                        Extra Fees
-                                      </Text>
-                                      <Text
-                                        style={[styles.tableCell, styles.bold]}
-                                      >
-                                        Doorstep Fee
-                                      </Text>
-                                      <Text
-                                        style={[styles.tableCell, styles.bold]}
-                                      >
-                                        Pickup Fee
-                                      </Text>
-                                      <Text
-                                        style={[styles.tableCell, styles.bold]}
-                                      >
-                                        Total
-                                      </Text>
-                                    </View>
-                                    <View style={styles.tableRow}>
-                                      <Text style={styles.tableCell}>
-                                        {l?.weight} Kg
-                                      </Text>
-                                      <Text style={styles.tableCell}>
-                                        {l?.origin?.toUpperCase() === "CANADA"
-                                          ? "$"
-                                          : "N"}
-                                        {Number(
-                                          l?.shipping_rate
-                                        )?.toLocaleString()}
-                                      </Text>
-                                      <Text style={styles.tableCell}>
-                                        {l?.origin?.toUpperCase() === "CANADA"
-                                          ? "$"
-                                          : "N"}{" "}
-                                        {Number(l?.carton)?.toLocaleString()}
-                                      </Text>
-                                      <Text style={styles.tableCell}>
-                                        {l?.origin?.toUpperCase() === "CANADA"
-                                          ? "$"
-                                          : "N"}{" "}
-                                        {Number(
-                                          l?.total_extra_fees || 0
-                                        )?.toLocaleString()}
-                                      </Text>
-                                      <Text style={styles.tableCell}>
-                                        {l?.origin?.toUpperCase() === "CANADA"
-                                          ? "$"
-                                          : "N"}{" "}
-                                        {Number(
-                                          l?.doorstep_fee
-                                        )?.toLocaleString()}
-                                      </Text>
-                                      <Text style={styles.tableCell}>
-                                        {l?.origin?.toUpperCase() === "CANADA"
-                                          ? "$"
-                                          : "N"}{" "}
-                                        {Number(
-                                          l?.pickup_price
-                                        )?.toLocaleString()}
-                                      </Text>
-                                      <Text style={styles.tableCell}>
-                                        {l?.origin?.toUpperCase() === "CANADA"
-                                          ? "$"
-                                          : "N"}
-                                        {(
-                                          Number(l?.amount) +
-                                          Number(l?.pickup_price || 0) +
-                                          Number(l?.total_extra_fees || 0)
-                                        )?.toLocaleString()}
-                                      </Text>
-                                    </View>
-                                  </View>
-
-                                  <Text style={styles.empty}></Text>
-                                  <Text style={styles.empty}></Text>
-
-                                  <Text style={styles.empty}></Text>
-
-                                  <Text style={styles.bold}>DESCRIPTION</Text>
-                                  <View style={styles.table}>
-                                    {/* Table Header */}
-                                    <View style={styles.tableRow}>
-                                      <Text
-                                        style={[
-                                          styles.tableCell,
-                                          styles.tableHeader,
-                                          styles.smalltext,
-                                          { flex: 1 },
-                                        ]}
-                                      >
-                                        Box Number
-                                      </Text>
-                                      <Text
-                                        style={[
-                                          styles.tableCell,
-                                          styles.tableHeader,
-                                          styles.smalltext,
-                                          { flex: 2 },
-                                        ]}
-                                      >
-                                        Details
-                                      </Text>
-                                    </View>
-
-                                    {/* Table Rows */}
-                                    {l.items?.map((item, index) => (
-                                      <View key={index} style={styles.tableRow}>
+                                    {/* Table Section */}
+                                    <View style={styles.table}>
+                                      <View style={styles.tableRow}>
                                         <Text
                                           style={[
                                             styles.tableCell,
+                                            styles.bold,
+                                          ]}
+                                        >
+                                          Weight (Kg)
+                                        </Text>
+                                        <Text
+                                          style={[
+                                            styles.tableCell,
+                                            styles.bold,
+                                          ]}
+                                        >
+                                          Shipping Rate
+                                        </Text>
+                                        <Text
+                                          style={[
+                                            styles.tableCell,
+                                            styles.bold,
+                                          ]}
+                                        >
+                                          Carton
+                                        </Text>
+                                        <Text
+                                          style={[
+                                            styles.tableCell,
+                                            styles.bold,
+                                          ]}
+                                        >
+                                          Extra Fees
+                                        </Text>
+                                        <Text
+                                          style={[
+                                            styles.tableCell,
+                                            styles.bold,
+                                          ]}
+                                        >
+                                          Doorstep Fee
+                                        </Text>
+                                        <Text
+                                          style={[
+                                            styles.tableCell,
+                                            styles.bold,
+                                          ]}
+                                        >
+                                          Pickup Fee
+                                        </Text>
+                                        <Text
+                                          style={[
+                                            styles.tableCell,
+                                            styles.bold,
+                                          ]}
+                                        >
+                                          Total
+                                        </Text>
+                                      </View>
+                                      <View style={styles.tableRow}>
+                                        <Text style={styles.tableCell}>
+                                          {l?.weight} Kg
+                                        </Text>
+                                        <Text style={styles.tableCell}>
+                                          {l?.origin?.toUpperCase() === "CANADA"
+                                            ? "$"
+                                            : "N"}
+                                          {Number(
+                                            l?.shipping_rate
+                                          )?.toLocaleString()}
+                                        </Text>
+                                        <Text style={styles.tableCell}>
+                                          {l?.origin?.toUpperCase() === "CANADA"
+                                            ? "$"
+                                            : "N"}{" "}
+                                          {Number(l?.carton)?.toLocaleString()}
+                                        </Text>
+                                        <Text style={styles.tableCell}>
+                                          {l?.origin?.toUpperCase() === "CANADA"
+                                            ? "$"
+                                            : "N"}{" "}
+                                          {Number(
+                                            l?.total_extra_fees || 0
+                                          )?.toLocaleString()}
+                                        </Text>
+                                        <Text style={styles.tableCell}>
+                                          {l?.origin?.toUpperCase() === "CANADA"
+                                            ? "$"
+                                            : "N"}{" "}
+                                          {Number(
+                                            l?.doorstep_fee
+                                          )?.toLocaleString()}
+                                        </Text>
+                                        <Text style={styles.tableCell}>
+                                          {l?.origin?.toUpperCase() === "CANADA"
+                                            ? "$"
+                                            : "N"}{" "}
+                                          {Number(
+                                            l?.pickup_price
+                                          )?.toLocaleString()}
+                                        </Text>
+                                        <Text style={styles.tableCell}>
+                                          {l?.origin?.toUpperCase() === "CANADA"
+                                            ? "$"
+                                            : "N"}
+                                          {(
+                                            Number(l?.amount) +
+                                            Number(l?.pickup_price || 0) +
+                                            Number(l?.total_extra_fees || 0)
+                                          )?.toLocaleString()}
+                                        </Text>
+                                      </View>
+                                    </View>
+
+                                    <Text style={styles.empty}></Text>
+                                    <Text style={styles.empty}></Text>
+
+                                    <Text style={styles.empty}></Text>
+
+                                    <Text style={styles.bold}>DESCRIPTION</Text>
+                                    <View style={styles.table}>
+                                      {/* Table Header */}
+                                      <View style={styles.tableRow}>
+                                        <Text
+                                          style={[
+                                            styles.tableCell,
+                                            styles.tableHeader,
                                             styles.smalltext,
                                             { flex: 1 },
                                           ]}
                                         >
-                                          {item?.box_number}
+                                          Box Number
                                         </Text>
                                         <Text
                                           style={[
                                             styles.tableCell,
+                                            styles.tableHeader,
                                             styles.smalltext,
                                             { flex: 2 },
                                           ]}
                                         >
-                                          {item.name}
+                                          Details
                                         </Text>
                                       </View>
-                                    ))}
-                                  </View>
 
-                                  <Text style={styles.empty}></Text>
-                                  <Text style={styles.empty}></Text>
+                                      {/* Table Rows */}
+                                      {l.items?.map((item, index) => (
+                                        <View
+                                          key={index}
+                                          style={styles.tableRow}
+                                        >
+                                          <Text
+                                            style={[
+                                              styles.tableCell,
+                                              styles.smalltext,
+                                              { flex: 1 },
+                                            ]}
+                                          >
+                                            {item?.box_number}
+                                          </Text>
+                                          <Text
+                                            style={[
+                                              styles.tableCell,
+                                              styles.smalltext,
+                                              { flex: 2 },
+                                            ]}
+                                          >
+                                            {item.name}
+                                          </Text>
+                                        </View>
+                                      ))}
+                                    </View>
 
-                                  {/* Description Section */}
-                                  <View style={styles.section}>
-                                    <Text style={styles.bold}>Note:</Text>
-                                    <Text style={styles.empty2}></Text>
-
-                                    <Text>
-                                      Outside province at your own cost!
-                                    </Text>
-                                  </View>
-                                  <Text style={styles.empty}></Text>
-                                  <Text style={styles.empty}></Text>
-                                  <Text style={styles.empty}></Text>
-
-                                  {/* Description Section */}
-                                  <View style={styles.section}>
-                                    <Text style={styles.bold}>
-                                      TERMS AND CONDITION
-                                    </Text>
-                                    <Text style={styles.empty2}></Text>
-
-                                    <Text>
-                                      Shipping timelines are estimates and not
-                                      guaranteed as exact arrival timelines is
-                                      determined by airlines and carriers,
-                                      Canada Cargo is not liable for any delays
-                                      in shipping timelines as well as spoilt or
-                                      rotten items due to delays in shipping
-                                      timelines. All shipments are subject to
-                                      customs check both in Nigeria and
-                                      destination country, Canada Cargo is not
-                                      liable for any removal of items deemed
-                                      unfit to leave or enter into the
-                                      destination country by customs.(IITA)
-                                      neither are we liable for opened boxes.
-                                      your shipment is In Transit Same is
-                                      applicable to frozen shipments, we are not
-                                      liable for any damage to leaves or any
-                                      other fresh produce as a result of delay
-                                      or defrost of your items during transit.
-                                    </Text>
-                                    <Text style={styles.empty2}></Text>
-
-                                    <Text style={styles.bold}>
-                                      NB: IF YOU WANT INSURANCE, REQUEST FOR THE
-                                      RATES.
-                                    </Text>
                                     <Text style={styles.empty}></Text>
                                     <Text style={styles.empty}></Text>
-                                    <Text>
-                                      Tel: +1 647 916 9511, +234 904 404 9709 |
-                                      https://www.canadacargo.net | Email:
-                                      info@canadacargo.net
-                                    </Text>
-                                  </View>
-                                </Page>
-                              </Document>
-                            }
-                          >
-                            {({ blob, url, loading, error }) =>
-                              loading ? (
-                                "Loading document..."
-                              ) : (
-                                <ArrowDownIcon className="text-white text-2xl h-6 w-6"></ArrowDownIcon>
-                              )
-                            }
-                          </PDFDownloadLink>
+
+                                    {/* Description Section */}
+                                    <View style={styles.section}>
+                                      <Text style={styles.bold}>Note:</Text>
+                                      <Text style={styles.empty2}></Text>
+
+                                      <Text>
+                                        Outside province at your own cost!
+                                      </Text>
+                                    </View>
+                                    <Text style={styles.empty}></Text>
+                                    <Text style={styles.empty}></Text>
+                                    <Text style={styles.empty}></Text>
+
+                                    {/* Description Section */}
+                                    <View style={styles.section}>
+                                      <Text style={styles.bold}>
+                                        TERMS AND CONDITION
+                                      </Text>
+                                      <Text style={styles.empty2}></Text>
+
+                                      <Text>
+                                        Shipping timelines are estimates and not
+                                        guaranteed as exact arrival timelines is
+                                        determined by airlines and carriers,
+                                        Canada Cargo is not liable for any
+                                        delays in shipping timelines as well as
+                                        spoilt or rotten items due to delays in
+                                        shipping timelines. All shipments are
+                                        subject to customs check both in Nigeria
+                                        and destination country, Canada Cargo is
+                                        not liable for any removal of items
+                                        deemed unfit to leave or enter into the
+                                        destination country by customs.(IITA)
+                                        neither are we liable for opened boxes.
+                                        your shipment is In Transit Same is
+                                        applicable to frozen shipments, we are
+                                        not liable for any damage to leaves or
+                                        any other fresh produce as a result of
+                                        delay or defrost of your items during
+                                        transit.
+                                      </Text>
+                                      <Text style={styles.empty2}></Text>
+
+                                      <Text style={styles.bold}>
+                                        NB: IF YOU WANT INSURANCE, REQUEST FOR
+                                        THE RATES.
+                                      </Text>
+                                      <Text style={styles.empty}></Text>
+                                      <Text style={styles.empty}></Text>
+                                      <Text>
+                                        Tel: +1 647 916 9511, +234 904 404 9709
+                                        | https://www.canadacargo.net | Email:
+                                        info@canadacargo.net
+                                      </Text>
+                                    </View>
+                                  </Page>
+                                </Document>
+                              }
+                            >
+                              {({ loading }) =>
+                                loading ? (
+                                  "Loading document..."
+                                ) : (
+                                  <ArrowDownIcon className="text-white text-2xl h-6 w-6" />
+                                )
+                              }
+                            </PDFDownloadLink>
+                          ) : (
+                            <button
+                              className="btn btn-sm btn-black text-white bg-slate-600 hover:bg-slate-900 transition-all"
+                              onClick={() => setActivePDF(l.trans_id)}
+                            >
+                              <ArrowDownIcon className="text-white text-2xl h-6 w-6" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

@@ -12,7 +12,7 @@ export const ShippingCostPerKg = () => {
   const tokenRef = useRef(userExists);
   const [alltaxrates, setAllTaxRates] = useState([]);
 
-  console.log(alltaxrates);
+  // console.log(alltaxrates);
 
   const [userDetails, setUserDetails] = useState("");
   const [shippingCost, setShippingCost] = useState(0);
@@ -86,7 +86,7 @@ export const ShippingCostPerKg = () => {
         }
       );
 
-      console.log(response.data.shipmentCosts);
+      // console.log(response.data.shipmentCosts);
 
       setAllTaxRates(response.data.shipmentCosts);
       setIsLoading(false);

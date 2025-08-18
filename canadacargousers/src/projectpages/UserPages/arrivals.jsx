@@ -56,12 +56,12 @@ function Arrivals() {
 
       const uniqueTrackingNumbers = [...new Set(trackingNumbers)];
 
-      console.log(
-        response.data.data,
-        uniqueTrackingNumbers.filter((eachItem) => {
-          return eachItem !== "";
-        })
-      );
+      // console.log(
+      //   response.data.data,
+      //   uniqueTrackingNumbers.filter((eachItem) => {
+      //     return eachItem !== "";
+      //   })
+      // );
 
       setTracking_numbers(
         uniqueTrackingNumbers.filter((eachItem) => {

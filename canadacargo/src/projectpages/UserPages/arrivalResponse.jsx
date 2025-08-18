@@ -481,7 +481,7 @@ function ArrivalResponse() {
       postagebill: postageBill,
       date: deliveryDate,
     };
-    console.log("Submitted:", data);
+    // console.log("Submitted:", data);
     handleClose();
   };
 

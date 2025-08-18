@@ -131,12 +131,12 @@ function Arrivals() {
         uniqueTrackingNumbers.filter((eachItem) => eachItem !== "")
       );
 
-      console.log(response.data.data);
+      // console.log(response.data.data);
 
       setDispTrans(response.data.data);
       setTrans(response.data.data);
 
-      console.log(response.data.data);
+      // console.log(response.data.data);
       setsendloading(false);
     } catch (error) {
       setsendloading(false);

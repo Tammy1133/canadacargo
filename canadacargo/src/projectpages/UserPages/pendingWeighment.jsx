@@ -145,7 +145,7 @@ function PendingWeighments() {
   function safeParseObject(value) {
     if (!value) return {};
 
-    console.log(typeof value);
+    // console.log(typeof value);
 
     try {
       if (
@@ -811,7 +811,6 @@ function PendingWeighments() {
                         </option>
                       ))}
                     </select>
-
                     <label className="block my-5">
                       Weight:
                       <input

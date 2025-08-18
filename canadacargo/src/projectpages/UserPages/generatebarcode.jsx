@@ -58,8 +58,6 @@ function GenerateBarcode() {
         }
       );
 
-      console.log(response.data.data);
-
       setTrans(response.data.data);
 
       setsendloading(false);
@@ -84,7 +82,7 @@ function GenerateBarcode() {
   const viewBarcodeInfo = (id, shipment) => {
     setSelectedId(id); // Save the selected ID
 
-    console.log(shipment);
+    // console.log(shipment);
 
     setDisplayingShipperInfo(shipment);
     setIsModalOpen(true); // Open modal when button is clicked
@@ -98,7 +96,7 @@ function GenerateBarcode() {
       return t;
     });
 
-    console.log(newTrans);
+    // console.log(newTrans);
 
     setTrans(newTrans);
   };
@@ -213,6 +211,9 @@ function GenerateBarcode() {
                 <tr>
                   <th className="!font-bold !text-center">Date</th>
                   <th className="!font-bold !text-center">Shipper Name</th>
+                  <th className="!font-bold !text-center">Receiver Name</th>
+                  <th className="!font-bold !text-center">Pickup Date</th>
+                  <th className="!font-bold !text-center">EDD</th>
                   <th className="!font-bold !text-center">Phone Number</th>
                   <th className="!font-bold !text-center min-w-[170px]">
                     Address
@@ -220,7 +221,6 @@ function GenerateBarcode() {
                   <th className="!font-bold !text-center">Email</th>
                   <th className="!font-bold !text-center">No of cartons</th>
                   <th className="!font-bold !text-center">Status</th>
-
                   <th className="!font-bold !text-center">Action</th>
                 </tr>
               </thead>
@@ -232,6 +232,11 @@ function GenerateBarcode() {
                         {new Date(l?.created_date)?.toLocaleDateString() || "-"}
                       </td>
                       <td className="truncate">{l.shipper_name}</td>
+                      <td className="truncate">{l.receiver_name}</td>
+
+                      <td className="truncate">{l.pickup_date}</td>
+                      <td className="truncate">{l.expected_date_delivery}</td>
+
                       <td className="truncate">{l.shipper_phone}</td>
                       <td className="truncate" style={{ maxWidth: "150px" }}>
                         {l.shipper_address}

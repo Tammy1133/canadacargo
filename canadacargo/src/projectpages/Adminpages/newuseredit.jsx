@@ -82,9 +82,9 @@ export const NewUserEdit = () => {
     }));
   };
 
-  useEffect(() => {
-    console.log(selectedModules);
-  }, [selectedModules]);
+  // useEffect(() => {
+  //   console.log(selectedModules);
+  // }, [selectedModules]);
 
   const getUsers = () => {
     setsendloading(true);
@@ -284,7 +284,7 @@ export const NewUserEdit = () => {
 
         const user = userDataRef.current.find((u) => u.email === email);
 
-        console.log(user);
+        // console.log(user);
 
         if (user) {
           deleteUser(user?.email);
@@ -400,7 +400,7 @@ export const NewUserEdit = () => {
                           selectedModules,
                         })
                           .then((result) => {
-                            console.log("Update successful:", result);
+                            // console.log("Update successful:", result);
                           })
                           .catch((error) => {
                             console.error("Update failed:", error.message);

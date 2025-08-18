@@ -182,7 +182,7 @@ export const ConfirmPayment = () => {
         }
       );
 
-      console.log(response);
+      // console.log(response);
 
       if (response.data?.exists) {
         if (response.data?.exists[1] !== 1) {
@@ -194,10 +194,10 @@ export const ConfirmPayment = () => {
 
       setIDLoading(false);
     } catch (error) {
-      console.log(
-        "Error creating arrival response:",
-        error.response?.data || error.message
-      );
+      // console.log(
+      //   "Error creating arrival response:",
+      //   error.response?.data || error.message
+      // );
     }
   };
 

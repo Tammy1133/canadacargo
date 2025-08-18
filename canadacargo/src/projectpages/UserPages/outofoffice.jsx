@@ -21,7 +21,7 @@ import {
 function OutOfOffice() {
   const [trans, setTrans] = useState([]);
 
-  console.log(trans);
+  // console.log(trans);
 
   const navigate = useNavigate();
 
@@ -244,7 +244,7 @@ function OutOfOffice() {
         }
       );
 
-      console.log(response.data);
+      // console.log(response.data);
 
       setTrans(response.data.data);
     } catch (error) {
@@ -296,7 +296,7 @@ function OutOfOffice() {
     try {
       setsendloading(true);
 
-      console.log({ trans_id, amount, items });
+      // console.log({ trans_id, amount, items });
 
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/completePayment`,
@@ -530,9 +530,9 @@ function OutOfOffice() {
                           <button
                             className="btn btn-sm btn-accent text-white bg-green-600 ml-1"
                             onClick={() => {
-                              console.log(
-                                trans.find((t) => t.trans_id === l.trans_id)
-                              );
+                              // console.log(
+                              //   trans.find((t) => t.trans_id === l.trans_id)
+                              // );
 
                               handleProcessClick(
                                 trans.find((t) => t.trans_id === l.trans_id)

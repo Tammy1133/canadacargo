@@ -30,7 +30,7 @@ export const OtherProvince = () => {
   const [idLoading, setIDLoading] = useState("");
   const [shipmentLogs, setShipmentLogs] = useState([]);
 
-  console.log(shipmentInfo);
+  // console.log(shipmentInfo);
 
   const provincesAndTerritories = [
     "Alberta",
@@ -217,10 +217,10 @@ export const OtherProvince = () => {
 
       setIDLoading(false);
     } catch (error) {
-      console.log(
-        "Error creating arrival response:",
-        error.response?.data || error.message
-      );
+      // console.log(
+      //   "Error creating arrival response:",
+      //   error.response?.data || error.message
+      // );
     }
   };
 

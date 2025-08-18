@@ -1,53 +1,31 @@
 import moment from "moment";
 import { useEffect, useRef, useState } from "react";
 import TitleCard from "../../components/Cards/TitleCard";
-import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
-import { useReactToPrint } from "react-to-print";
 
-import SearchBar from "../../components/Input/SearchBar";
-import Swal from "sweetalert2";
-import BarcodeComponent from "../UserComponents/barcodeComponent";
-import BarcodeMultipleComponent from "../UserComponents/barcodeMultipleComponent";
-import {
-  Bars3Icon,
-  EyeIcon,
-  InformationCircleIcon,
-  Squares2X2Icon,
-} from "@heroicons/react/24/outline";
+import { EyeIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
 import axios from "axios";
 import { getUserDetails } from "../../projectcomponents/auth";
 import { getBoxNumbersFromItems } from "../../utils/globalConstantUtil";
 
 function InTransit() {
-  const s = [];
-
   const [trans, setTrans] = useState([]);
-
   const [shipmentModalShowing, setShipmentModalShowing] = useState(false);
-
-  const viewShipmentInfo = (id) => {
-    setShipmentModalShowing(true);
-  };
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
-
-  console.log(selectedId);
-
   const [searchText, setSearchText] = useState("");
   const [userToken, setUserToken] = useState(() => getUserDetails()?.token);
   const [displayingShipperInfo, setDisplayingShipperInfo] = useState({});
-
   const [sendloading, setsendloading] = useState(false);
-
   const [originalTrans, setOriginalTrans] = useState([]);
-
   const [allOrigins, setAllOrigins] = useState([]);
   const [allDestinations, setAllDestinations] = useState([]);
   const [selectedOrigin, setSelectedOrigin] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedEndDate, setSelectedEndDate] = useState("");
   const [selectedDestination, setSelectedDestination] = useState("");
+  const [selectedTrackingNumber, setSelectedTrackingNumber] = useState("");
+  const [trackingNumbers, setTrackingNumbers] = useState([]);
+
   const getAllOrigins = async () => {
     try {
       const response = await axios.get(
@@ -99,26 +77,48 @@ function InTransit() {
     setsendloading(false);
   }, []);
 
+  const viewShipmentInfo = (id) => {
+    setShipmentModalShowing(true);
+  };
+
   const viewBarcodeInfo = (id) => {
     setSelectedId(id);
     setIsModalOpen(true);
   };
 
-  const applySearch = (searchText) => {
-    const trimmedSearchText = searchText.trim();
+  // Extract unique tracking numbers from originalTrans
+  useEffect(() => {
+    const uniqueTrackingNumbers = [
+      ...new Set(
+        originalTrans
+          .flatMap((t) => t.items)
+          .map((item) => item.tracking_number)
+          .filter((tracking) => tracking) // Remove null/undefined
+      ),
+    ];
+    setTrackingNumbers(uniqueTrackingNumbers);
+  }, [originalTrans]);
 
-    if (trimmedSearchText === "") {
-      setTrans(originalTrans);
-      return;
+  const applySearch = (searchText, trackingNumber) => {
+    let filteredTrans = originalTrans;
+
+    // Apply search text filter
+    if (searchText.trim()) {
+      filteredTrans = filteredTrans.filter((t) =>
+        Object.values(t?.shipment_info).some(
+          (value) =>
+            typeof value === "string" &&
+            value.toLowerCase().includes(searchText.trim().toLowerCase())
+        )
+      );
     }
 
-    const filteredTrans = originalTrans.filter((t) =>
-      Object.values(t?.shipment_info).some(
-        (value) =>
-          typeof value === "string" &&
-          value.toLowerCase().includes(trimmedSearchText.toLowerCase())
-      )
-    );
+    // Apply tracking number filter
+    if (trackingNumber) {
+      filteredTrans = filteredTrans.filter((t) =>
+        t.items.some((item) => item.tracking_number === trackingNumber)
+      );
+    }
 
     setTrans(filteredTrans);
   };
@@ -146,6 +146,7 @@ function InTransit() {
       );
 
       setTrans(response.data.data);
+      setOriginalTrans(response.data.data); // Store original data
       setsendloading(false);
     } catch (error) {
       setsendloading(false);
@@ -163,18 +164,11 @@ function InTransit() {
     }
   }, [selectedOrigin, selectedDestination, selectedDate, selectedEndDate]);
 
-  useEffect(() => {
-    if (originalTrans.length === 0 && trans.length > 0) {
-      setOriginalTrans(trans);
-    }
-  }, [trans]);
-
   return (
     userToken && (
       <>
-        <div className=" mx-auto p-6 bg-white shadow-md rounded-xl ">
+        <div className="mx-auto p-6 bg-white shadow-md rounded-xl">
           <h2 className="text-lg font-semibold mb-4">Select Locations</h2>
-
           <div className="flex space-x-4">
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -193,7 +187,6 @@ function InTransit() {
                 ))}
               </select>
             </div>
-
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Destination
@@ -214,7 +207,7 @@ function InTransit() {
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center  bg-white shadow-md rounded-lg px-6  pb-2 -mt-4 mb-5 space-y-4 sm:space-y-0 sm:space-x-4">
+        <div className="flex flex-col sm:flex-row items-center bg-white shadow-md rounded-lg px-6 pb-2 -mt-4 mb-5 space-y-4 sm:space-y-0 sm:space-x-4">
           <div className="flex flex-col">
             <label
               htmlFor="startDate"
@@ -225,16 +218,14 @@ function InTransit() {
             <input
               type="date"
               value={selectedDate}
-              onChange={(e) => {
-                setSelectedDate(e.target.value);
-              }}
+              onChange={(e) => setSelectedDate(e.target.value)}
               id="date"
               className="mt-1 border rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
           </div>
           <div className="flex flex-col">
             <label
-              htmlFor="startDate"
+              htmlFor="endDate"
               className="text-sm font-semibold text-gray-700"
             >
               Select End Date
@@ -242,10 +233,8 @@ function InTransit() {
             <input
               type="date"
               value={selectedEndDate}
-              onChange={(e) => {
-                setSelectedEndDate(e.target.value);
-              }}
-              id="date"
+              onChange={(e) => setSelectedEndDate(e.target.value)}
+              id="endDate"
               className="mt-1 border rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
           </div>
@@ -255,17 +244,34 @@ function InTransit() {
           title="Items in transit"
           topMargin="mt-2"
           TopSideButtons={
-            <div className={"inline-block "}>
-              <div className="input-group  relative flex flex-wrap items-stretch w-full ">
+            <div className="flex items-center">
+              <div className="flex flex-col mr-2">
+                <select
+                  value={selectedTrackingNumber}
+                  onChange={(e) => {
+                    setSelectedTrackingNumber(e.target.value);
+                    applySearch(searchText, e.target.value);
+                  }}
+                  className="mt-1 border rounded-md px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:outline-none text-base"
+                >
+                  <option value="">-- Select Tracking Number --</option>
+                  {trackingNumbers.map((tracking, index) => (
+                    <option key={index} value={tracking}>
+                      {tracking}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="input-group relative flex flex-wrap items-stretch w-full">
                 <input
                   type="search"
                   value={searchText}
-                  placeholder={"Search"}
+                  placeholder="Search"
                   onChange={(e) => {
                     setSearchText(e.target.value);
-                    applySearch(e.target.value);
+                    applySearch(e.target.value, selectedTrackingNumber);
                   }}
-                  className="input input-sm input-bordered  w-full max-w-xs"
+                  className="input input-sm input-bordered w-full max-w-xs"
                 />
               </div>
             </div>
@@ -283,65 +289,60 @@ function InTransit() {
                   <th className="!font-bold !text-center min-w-[170px]">
                     Address
                   </th>
-
                   <th className="!font-bold !text-center">Action</th>
                 </tr>
               </thead>
               <tbody>
-                {trans.map((l, k) => {
-                  return (
-                    <tr key={k}>
-                      <td className="truncate">
-                        {new Date(l?.created_at)?.toLocaleDateString() || "-"}
-                      </td>
-
-                      <td className="">{getBoxNumbersFromItems(l?.items)}</td>
-                      <td className="truncate">
-                        {l.items === "[]" ? 0 : l?.items?.length}
-                      </td>
-                      <td className="truncate">
-                        {l.shipment_info?.shipper_name}
-                      </td>
-                      <td className="truncate">
-                        {l.shipment_info?.shipper_phone}
-                      </td>
-                      <td className="truncate max-w-[200px]">
-                        {l.shipment_info?.receiver_address}
-                      </td>
-
-                      <td>
-                        <div className="flex space-x-2">
-                          <button
-                            className="btn btn-sm btn-primary bg-blue-600"
-                            onClick={() => {
-                              viewShipmentInfo(l.item_trans_id);
-                              setDisplayingShipperInfo(l.shipment_info);
-                            }}
-                          >
-                            <InformationCircleIcon className="text-white text-2xl h-6 w-6"></InformationCircleIcon>
-                          </button>
-
-                          <button
-                            className="btn btn-sm btn-secondary bg-gray-600"
-                            onClick={() => {
-                              viewBarcodeInfo(l.item_trans_id);
-                              setDisplayingShipperInfo(l.shipment_info);
-                            }}
-                          >
-                            <EyeIcon className="text-white text-2xl h-6 w-6"></EyeIcon>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {trans.map((l, k) => (
+                  <tr key={k}>
+                    <td className="truncate">
+                      {new Date(l?.created_at)?.toLocaleDateString() || "-"}
+                    </td>
+                    <td className="">{getBoxNumbersFromItems(l?.items)}</td>
+                    <td className="truncate">
+                      {l.items === "[]" ? 0 : l?.items?.length}
+                    </td>
+                    <td className="truncate">
+                      {l.shipment_info?.shipper_name}
+                    </td>
+                    <td className="truncate">
+                      {l.shipment_info?.shipper_phone}
+                    </td>
+                    <td className="truncate max-w-[200px]">
+                      {l.shipment_info?.receiver_address}
+                    </td>
+                    <td>
+                      <div className="flex space-x-2">
+                        <button
+                          className="btn btn-sm btn-primary bg-blue-600"
+                          onClick={() => {
+                            viewShipmentInfo(l.item_trans_id);
+                            setDisplayingShipperInfo(l.shipment_info);
+                          }}
+                        >
+                          <InformationCircleIcon className="text-white text-2xl h-6 w-6" />
+                        </button>
+                        <button
+                          className="btn btn-sm btn-secondary bg-gray-600"
+                          onClick={() => {
+                            viewBarcodeInfo(l.trans_id);
+                            setDisplayingShipperInfo(l.shipment_info);
+                          }}
+                        >
+                          <EyeIcon className="text-white text-2xl h-6 w-6" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
         </TitleCard>
+
         {isModalOpen && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-50  overflow-y-auto"
+            className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto"
             onClick={() => setIsModalOpen(false)}
           >
             <div className="flex justify-center mx-auto items-center w-screen h-screen mt-[40px]">
@@ -352,7 +353,6 @@ function InTransit() {
                 <h2 className="text-lg font-bold mb-4 text-center">
                   List of Items for {displayingShipperInfo?.shipper_name}
                 </h2>
-
                 <div className="overflow-x-auto">
                   <table className="min-w-full table-auto border-collapse border border-gray-200">
                     <thead>
@@ -366,11 +366,14 @@ function InTransit() {
                         <th className="px-4 py-2 text-left border-b text-gray-600 font-semibold">
                           Status
                         </th>
+                        <th className="px-4 py-2 text-left border-b text-gray-600 font-semibold">
+                          Tracking Number
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {trans
-                        .find((t) => t.item_trans_id === selectedId)
+                        .find((t) => t.trans_id === selectedId)
                         ?.items.map((item, index) => (
                           <tr key={index} className="hover:bg-gray-100">
                             <td className="px-4 py-2 border-b">{item.name}</td>
@@ -380,12 +383,14 @@ function InTransit() {
                             <td className="px-4 py-2 border-b">
                               {item.status}
                             </td>
+                            <td className="px-4 py-2 border-b">
+                              {item.tracking_number || "N/A"}
+                            </td>
                           </tr>
                         ))}
                     </tbody>
                   </table>
                 </div>
-
                 <div className="flex space-x-2 mt-4 justify-end">
                   <button
                     onClick={() => setIsModalOpen(false)}
@@ -402,15 +407,11 @@ function InTransit() {
         {shipmentModalShowing && (
           <div
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-            onClick={() => {
-              setShipmentModalShowing(false);
-            }}
+            onClick={() => setShipmentModalShowing(false)}
           >
             <div
               className="bg-white w-full max-w-4xl rounded-lg shadow-lg overflow-auto max-h-[90vh]"
-              onClick={(e) => {
-                e.stopPropagation();
-              }}
+              onClick={(e) => e.stopPropagation()}
             >
               <div className="p-6">
                 <div className="flex justify-between items-center border-b pb-4">
@@ -424,7 +425,6 @@ function InTransit() {
                     ✕
                   </button>
                 </div>
-
                 <div className="mt-6 space-y-6">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-700">
@@ -449,7 +449,6 @@ function InTransit() {
                       </p>
                     </div>
                   </div>
-
                   <div>
                     <h3 className="text-lg font-semibold text-gray-700">
                       Receiver Information
@@ -473,7 +472,6 @@ function InTransit() {
                       </p>
                     </div>
                   </div>
-
                   <div>
                     <h3 className="text-lg font-semibold text-gray-700">
                       Shipment Details
@@ -483,7 +481,6 @@ function InTransit() {
                         <span className="font-semibold">Shipment Type:</span>{" "}
                         {displayingShipperInfo?.shipment_type || "N/A"}
                       </p>
-
                       <p>
                         <span className="font-semibold">Courier:</span>{" "}
                         {displayingShipperInfo?.courier || "N/A"}
@@ -512,17 +509,6 @@ function InTransit() {
                       </p>
                     </div>
                   </div>
-
-                  {/* <div>
-                    <h3 className="text-lg font-semibold text-gray-700">
-                      Description
-                    </h3>
-                    <p className="mt-2 text-gray-600">
-                      {displayingShipperInfo?.comments ||
-                        "No Description provided."}
-                    </p>
-                  </div> */}
-
                   <div>
                     <h3 className="text-lg font-semibold text-gray-700">
                       Province
@@ -533,7 +519,6 @@ function InTransit() {
                     </p>
                   </div>
                 </div>
-
                 <div className="mt-6 flex justify-end">
                   <button
                     className="bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300"

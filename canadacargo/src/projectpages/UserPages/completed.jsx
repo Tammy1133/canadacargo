@@ -96,7 +96,7 @@ function Completed() {
       return t;
     });
 
-    console.log(newTrans);
+    // console.log(newTrans);
 
     setTrans(newTrans);
   };
