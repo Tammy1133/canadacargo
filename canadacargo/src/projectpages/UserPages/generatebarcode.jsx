@@ -15,6 +15,7 @@ import { getUserDetails } from "../../projectcomponents/auth";
 import axios from "axios";
 import QRCodeMultipleComponent from "../UserComponents/barcodeMultipleComponent";
 import QRCodeComponent from "../UserComponents/barcodeComponent";
+import { getBoxNumbersFromItems } from "../../utils/globalConstantUtil";
 
 function GenerateBarcode() {
   const s = [];
@@ -210,10 +211,9 @@ function GenerateBarcode() {
               <thead>
                 <tr>
                   <th className="!font-bold !text-center">Date</th>
+                  <th className="!font-bold !text-center">Boxes</th>
                   <th className="!font-bold !text-center">Shipper Name</th>
-                  <th className="!font-bold !text-center">Receiver Name</th>
                   <th className="!font-bold !text-center">Pickup Date</th>
-                  <th className="!font-bold !text-center">EDD</th>
                   <th className="!font-bold !text-center">Phone Number</th>
                   <th className="!font-bold !text-center min-w-[170px]">
                     Address
@@ -231,11 +231,10 @@ function GenerateBarcode() {
                       <td className="truncate">
                         {new Date(l?.created_date)?.toLocaleDateString() || "-"}
                       </td>
+                      <td className="">{getBoxNumbersFromItems(l?.items)}</td>
                       <td className="truncate">{l.shipper_name}</td>
-                      <td className="truncate">{l.receiver_name}</td>
 
                       <td className="truncate">{l.pickup_date}</td>
-                      <td className="truncate">{l.expected_date_delivery}</td>
 
                       <td className="truncate">{l.shipper_phone}</td>
                       <td className="truncate" style={{ maxWidth: "150px" }}>

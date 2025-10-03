@@ -42,6 +42,7 @@ const {
   sendTrackingNotification,
   getAllShipmentItems,
   getShipmentInfoForEdit,
+  deleteShipment,
 } = require("../../controllers/shipmentControllers/generalShipment");
 const { authenticateUser } = require("../../middlewares/authMiddleware");
 
@@ -148,5 +149,6 @@ router.post("/getPaymentResponsesByDate", getPaymentResponsesByDate);
 router.post("/verifyPayment", verifyPayment);
 
 router.post("/sendTrackingNotification", sendTrackingNotification);
+router.delete("/deleteShipment/:trans_id", deleteShipment);
 
 module.exports = router;

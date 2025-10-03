@@ -9,6 +9,7 @@ import {
   ArrowsRightLeftIcon,
   CogIcon,
   InformationCircleIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import axios from "axios";
 import { getUserDetails } from "../../projectcomponents/auth";
@@ -149,6 +150,76 @@ function AllShipments() {
         );
       }
     });
+  };
+
+  const handleDeleteClick = (shipment) => {
+    const itemsList = `
+    <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-top:10px">
+      <thead>
+        <tr>
+          <th style="border: 1px solid #ddd; padding: 8px;">Name</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Weight (kg)</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Type</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${shipment.items
+          .map(
+            (item) => `
+          <tr>
+            <td style="border: 1px solid #ddd; padding: 8px;">${item.name?.toUpperCase()}</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">${
+              item.weight
+            }</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">${item?.type?.toUpperCase()}</td>
+            <td style="border: 1px solid #ddd; padding: 8px;">${item?.status?.toUpperCase()}</td>
+          </tr>`
+          )
+          .join("")}
+      </tbody>
+    </table>
+  `;
+
+    Swal.fire({
+      title: "Delete Shipment?",
+      html: `Are you sure you want to <b>delete this shipment</b>?<br>
+           Transaction ID: <b>${shipment.trans_id}</b><br>
+           ${itemsList}`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "Cancel",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          setsendloading(true);
+          const res = await axios.delete(
+            `${import.meta.env.VITE_API_URL}/deleteShipment/${
+              shipment.trans_id
+            }`
+          );
+          Swal.fire("Deleted!", res.data.message, "success");
+
+          getCompletedPayments();
+
+          setsendloading(false);
+        } catch (err) {
+          setsendloading(false);
+          Swal.fire(
+            "Error!",
+            err.response?.data?.message || "Failed to delete shipment",
+            "error"
+          );
+        }
+      }
+    });
+  };
+
+  const allItemsValid = (items, validStatuses = ["Pending", "Processed"]) => {
+    return items.every((item) => validStatuses.includes(item.status));
   };
 
   const [userToken, setUserToken] = useState(() => getUserDetails()?.token);
@@ -554,10 +625,24 @@ function AllShipments() {
                               handleProcessClick(
                                 trans.find((t) => t.trans_id === l.trans_id)
                               );
-                            }} // Call the function with the selected shipment
+                            }}
                           >
                             <ArrowsRightLeftIcon className="text-white text-2xl h-6 w-6"></ArrowsRightLeftIcon>
                           </button>
+
+                          {(l.items?.length === 0 ||
+                            allItemsValid(l?.items)) && (
+                            <button
+                              className="btn btn-sm btn-accent text-white bg-red-600 ml-1"
+                              onClick={() => {
+                                handleDeleteClick(
+                                  trans.find((t) => t.trans_id === l.trans_id)
+                                );
+                              }}
+                            >
+                              <TrashIcon className="text-white text-2xl h-6 w-6" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

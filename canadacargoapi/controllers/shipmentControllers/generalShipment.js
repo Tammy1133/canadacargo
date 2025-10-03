@@ -22,6 +22,71 @@ const transporter = nodemailer.createTransport({
   debug: true,
 });
 
+const deleteShipment = async (req, res) => {
+  const { trans_id } = req.params;
+
+  if (!trans_id || trans_id.trim() === "") {
+    return res.status(400).json({ message: "Transaction ID is required" });
+  }
+
+  const t = await sequelize.transaction();
+
+  try {
+    await sequelize.query(
+      `DELETE FROM shipment_items WHERE trans_id = :trans_id`,
+      { replacements: { trans_id }, transaction: t }
+    );
+
+    await sequelize.query(
+      `DELETE FROM pending_weighment WHERE trans_id = :trans_id`,
+      { replacements: { trans_id }, transaction: t }
+    );
+
+    await sequelize.query(
+      `DELETE FROM pending_payment WHERE trans_id = :trans_id`,
+      { replacements: { trans_id }, transaction: t }
+    );
+
+    await sequelize.query(
+      `DELETE o FROM out_of_office o 
+       INNER JOIN shipment_items si ON o.item_trans_id = si.item_trans_id 
+       WHERE si.trans_id = :trans_id`,
+      { replacements: { trans_id }, transaction: t }
+    );
+
+    await sequelize.query(
+      `DELETE i FROM items_intransit i 
+       INNER JOIN shipment_items si ON i.item_trans_id = si.item_trans_id 
+       WHERE si.trans_id = :trans_id`,
+      { replacements: { trans_id }, transaction: t }
+    );
+
+    await sequelize.query(
+      `DELETE FROM completed_payments WHERE trans_id = :trans_id`,
+      { replacements: { trans_id }, transaction: t }
+    );
+
+    await sequelize.query(
+      `DELETE FROM shipment_info WHERE trans_id = :trans_id`,
+      { replacements: { trans_id }, transaction: t }
+    );
+
+    await t.commit();
+
+    res.status(200).json({
+      message: `Shipment with trans_id ${trans_id} deleted successfully.`,
+    });
+  } catch (error) {
+    await t.rollback();
+    console.error(error);
+    res.status(500).json({
+      message: "Failed to delete shipment",
+      error: error.message,
+    });
+  }
+};
+
+
 const createShipment = async (req, res) => {
   const {
     shipper_name,
@@ -2363,6 +2428,7 @@ const sendArrivalNotification = async (req, res) => {
 const sendArrivalNotifications = async (req, res) => {
   const { notifications } = req.body;
 
+  
   if (!Array.isArray(notifications) || notifications.length === 0) {
     return res.status(400).json({
       message: "Notifications array is required and must not be empty",
@@ -2387,6 +2453,7 @@ const sendArrivalNotifications = async (req, res) => {
     }
 
     try {
+      
       const [shipmentInfo] = await sequelize.query(
         `SELECT shipper_name, receiver_name, province, origin, destination FROM shipment_info WHERE trans_id = :trans_id`,
         { replacements: { trans_id } }
@@ -2625,7 +2692,7 @@ const sendArrivalNotifications = async (req, res) => {
         statusSummary,
       });
     } catch (error) {
-      console.error(
+      console.log(
         `Error processing notification for trans_id ${trans_id}:`,
         error
       );
@@ -2955,7 +3022,6 @@ const sendArrivalNotifications = async (req, res) => {
 const updateItemStatusToDelivered = async (req, res) => {
   const { item_trans_id, senderEmail, receiverEmail } = req.body;
 
-  // Validate required fields
   if (!item_trans_id || item_trans_id.trim() === "") {
     return res.status(400).json({ message: "Item transaction ID is required" });
   }
@@ -2968,159 +3034,198 @@ const updateItemStatusToDelivered = async (req, res) => {
     return res.status(400).json({ message: "Receiver email is required" });
   }
 
+  const transaction = await sequelize.transaction();
+
   try {
-    // Begin transaction
-    const transaction = await sequelize.transaction();
+    const trans_id = String(item_trans_id)?.split("_")[0];
 
-    let trans_id = String(item_trans_id)?.split("_")[0];
+    // 1️⃣ Fetch item details
+    const [itemDetails] = await sequelize.query(
+      `SELECT si.trans_id, si.name, si.type, si.weight, si.tracking_number,
+              si.item_trans_id, s.shipper_name, s.receiver_name, 
+              s.created_date, s.receiver_address, s.province
+       FROM shipment_items si
+       JOIN shipment_info s ON s.trans_id = si.trans_id
+       WHERE si.item_trans_id = :item_trans_id`,
+      { replacements: { item_trans_id }, transaction }
+    );
 
-    try {
-      const moment_date = moment.tz("Africa/Lagos");
-      const currentTime = moment_date.format("YYYY-MM-DD HH:mm:ss");
-
-      const [itemDetails] = await sequelize.query(
-        `SELECT si.trans_id, si.name, si.type, si.weight, si.tracking_number,
-                si.item_trans_id, s.shipper_name, s.receiver_name
-         FROM shipment_items si
-         JOIN shipment_info s ON s.trans_id = si.trans_id
-         WHERE si.item_trans_id = :item_trans_id`,
-        {
-          replacements: { item_trans_id },
-          transaction,
-        }
-      );
-
-      if (!itemDetails || itemDetails.length === 0) {
-        return res.status(404).json({ message: "Item not found" });
-      }
-
-      const {
-        trans_id,
-        name,
-        type,
-        weight,
-        tracking_number,
-        shipper_name,
-        receiver_name,
-      } = itemDetails[0];
-
-      // Update the status of the item in the shipment_items table to 'Delivered'
-      await sequelize.query(
-        `UPDATE shipment_items 
-         SET status = 'Delivered' 
-         WHERE item_trans_id = :item_trans_id`,
-        {
-          replacements: { item_trans_id },
-          transaction,
-        }
-      );
-
-      // Delete the item from the arrivals table
-      await sequelize.query(
-        `DELETE FROM arrivals 
-         WHERE item_trans_id = :item_trans_id`,
-        {
-          replacements: { item_trans_id },
-          transaction,
-        }
-      );
-
-      const [shipmentLogs] = await sequelize.query(
-        `SELECT logs FROM shipment_info WHERE trans_id = :trans_id`,
-        {
-          replacements: { trans_id },
-          transaction,
-        }
-      );
-
-      if (!shipmentLogs || shipmentLogs.length === 0) {
-        throw new Error("Shipment logs not found for provided trans_id.");
-      }
-
-      const currentLogs = JSON.parse(shipmentLogs[0].logs);
-
-      // Update 'delivered' timestamp in logs
-      currentLogs.delivered = currentTime;
-
-      await sequelize.query(
-        `UPDATE shipment_info SET logs = :logs WHERE trans_id = :trans_id`,
-        {
-          replacements: {
-            logs: JSON.stringify(currentLogs),
-            trans_id,
-          },
-          transaction,
-        }
-      );
-
-      await transaction.commit();
-
-      // Send email notifications
-
-      const logoPath = path.join(__dirname, "logo.png");
-      const mailOptions = {
-        from: '"Canada Cargo" <info@canadacargo.net>',
-        to: `${receiverEmail}`,
-        subject: `Item Status Update - Delivered`,
-        html: `
-          <div style="max-width: 600px; margin: auto; font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-            <div style="text-align: center; background-color: #007bff1f; padding: 20px; border-radius: 8px 8px 0 0;">
-              <img src="cid:logo" alt="Canada Cargo Logo" style="max-width: 180px;" />
-            </div>
-            <div style="padding: 20px; color: #333; line-height: 1.6;">
-              <p>Dear ${receiver_name},</p>
-              <p>The status of your item has been updated to <strong>Delivered</strong>. The details are as follows:</p>
-              <p><strong>Transaction ID:</strong> ${trans_id}</p>
-              <p><strong>Tracking Number:</strong> ${tracking_number}</p>
-              <p><strong>Name:</strong> ${name}</p>
-              <p><strong>Type:</strong> ${type}</p>
-              <p><strong>Weight:</strong> ${weight} kg</p>
-              <p>Thank you for using our services.</p>
-              <p>If you have any questions, feel free to contact us.</p>
-              <p>Best regards,<br/><strong>Canada Cargo</strong></p>
-            </div>
-            <div style="text-align: center; font-size: 12px; color: #888; padding: 10px; background-color: #f4f4f4;">
-              <p>Canada Cargo | <a href="https://canadacargo.net" style="color: #007bff">www.canadacargo.net</a></p>
-              <p>© 2025 Canada Cargo. All Rights Reserved.</p>
-            </div>
-          </div>
-        `,
-        attachments: [
-          {
-            filename: "logo.png",
-            path: logoPath,
-            cid: "logo",
-          },
-        ],
-      };
-
-      transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-          console.log("Error sending email:", error);
-        } else {
-          console.log("Email sent: " + info.response);
-        }
-      });
-
-      res.status(200).json({
-        message:
-          "Item status updated to 'Delivered', deleted from 'arrivals', and email sent to sender and receiver",
-        trans_id,
-      });
-    } catch (err) {
-      // Rollback transaction on error
+    if (!itemDetails || itemDetails.length === 0) {
       await transaction.rollback();
-      throw err;
+      return res.status(404).json({ message: "Item not found" });
     }
+
+    const {
+      trans_id: shipmentId,
+      shipper_name,
+      receiver_name,
+      created_date,
+      receiver_address,
+      province,
+    } = itemDetails[0];
+
+    // 2️⃣ Update item status
+    await sequelize.query(
+      `UPDATE shipment_items 
+       SET status = 'Delivered' 
+       WHERE item_trans_id = :item_trans_id`,
+      { replacements: { item_trans_id }, transaction }
+    );
+
+    // Remove from arrivals
+    await sequelize.query(
+      `DELETE FROM arrivals WHERE item_trans_id = :item_trans_id`,
+      { replacements: { item_trans_id }, transaction }
+    );
+
+    // 3️⃣ Update shipment logs
+    const [shipmentLogs] = await sequelize.query(
+      `SELECT logs FROM shipment_info WHERE trans_id = :trans_id`,
+      { replacements: { trans_id: shipmentId }, transaction }
+    );
+
+    const currentLogs = shipmentLogs?.[0]?.logs
+      ? JSON.parse(shipmentLogs[0].logs)
+      : {};
+    currentLogs.delivered = new Date().toISOString();
+
+    await sequelize.query(
+      `UPDATE shipment_info SET logs = :logs WHERE trans_id = :trans_id`,
+      {
+        replacements: {
+          logs: JSON.stringify(currentLogs),
+          trans_id: shipmentId,
+        },
+        transaction,
+      }
+    );
+
+    // 4️⃣ Check if ALL items in the shipment are delivered
+    const [allItems] = await sequelize.query(
+      `SELECT name, type, weight, status 
+       FROM shipment_items 
+       WHERE trans_id = :trans_id`,
+      { replacements: { trans_id: shipmentId }, transaction }
+    );
+
+    const allDelivered = allItems.every(
+      (item) => item.status.toLowerCase() === "delivered"
+    );
+
+    // ✅ Commit before sending emails
+    await transaction.commit();
+
+    if (!allDelivered) {
+      return res.status(200).json({
+        message:
+          "Item updated to Delivered. Waiting for all items before sending mail.",
+        trans_id: shipmentId,
+      });
+    }
+
+    // 5️⃣ Build shipment summary (only if all items delivered)
+    const totalWeight = allItems.reduce(
+      (sum, item) => sum + parseFloat(item.weight || 0),
+      0
+    );
+
+    const itemsDescription = allItems
+      .map(
+        (item, index) =>
+          `<li>${index + 1}. ${item.name} (${item.type}) - ${item.weight} KG</li>`
+      )
+      .join("");
+
+    const shipmentDate = getNextFridayDate(created_date);
+
+    // 6️⃣ Send mail
+    const logoPath = path.join(__dirname, "logo.png");
+    const mailOptions = {
+      from: '"Canada Cargo" <info@canadacargo.net>',
+      to: `${receiverEmail}, ${senderEmail}`,
+      subject: `Shipment Delivered - ${shipmentId}`,
+      html: `
+        <div style="max-width: 650px; margin: auto; font-family: Arial, sans-serif; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <img src="cid:logo" alt="Canada Cargo" style="max-width: 180px;" />
+          </div>
+          
+          <p>Dear ${receiver_name} and ${shipper_name},</p>
+          <p>Thank you for shipping with us.<br/>
+          We thought you’d like to know that your item(s) has been <strong>Delivered</strong>.</p>
+
+          <p><strong>Shipment Summary</strong></p>
+          <ul>
+            <li><strong>Shipment Date:</strong> ${shipmentDate}</li>
+            <li><strong>Receiver Address:</strong> ${province}, ${receiver_address}</li>
+            <li><strong>Items description:</strong> <ul>${itemsDescription}</ul></li>
+            <li><strong>Total Weight:</strong> ${totalWeight} KG</li>
+          </ul>
+
+          <p>Track your shipment using the link below:<br/>
+          <a href="https://tracking.canadacargo.net/trackshipment/${shipmentId}" target="_blank" style="color:#007bff;font-weight:bold;">Track your shipment here</a></p>
+
+          <p>Thank you for choosing <strong>Canada Cargo</strong> for your delivery. We look forward to you shipping with us again.</p>
+
+          <p>If you did not receive this package or in case of any questions, please call our Team on <strong>+1 647 773 9511, +234 904 404 9709</strong> or email: <strong>info@canadacargo.net</strong></p>
+
+          <p>Best regards,<br/><strong>Canada Cargo</strong></p>
+        </div>
+      `,
+      attachments: [{ filename: "logo.png", path: logoPath, cid: "logo" }],
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) console.error("Error sending email:", error);
+      else console.log("Email sent:", info.response);
+    });
+
+    return res.status(200).json({
+      message: "All items delivered. Email sent to shipper and receiver.",
+      trans_id: shipmentId,
+    });
   } catch (error) {
+    if (!transaction.finished) {
+      await transaction.rollback(); // ✅ rollback only if still active
+    }
     console.error(error);
-    res.status(500).json({
+    return res.status(500).json({
       message:
         "Failed to update item status to 'Delivered' and delete from 'arrivals'",
       error: error.message,
     });
   }
 };
+
+
+function getNextFridayDate(dateString) {
+  const date = new Date(dateString);
+  const dayOfWeek = date.getDay();
+
+  let daysToAdjust;
+  if (dayOfWeek === 6) daysToAdjust = -1;
+  else if (dayOfWeek === 0) daysToAdjust = -2;
+  else if (dayOfWeek !== 5) daysToAdjust = (5 - dayOfWeek + 7) % 7;
+  else daysToAdjust = 0;
+
+  date.setDate(date.getDate() + daysToAdjust);
+
+  const day = date.getDate();
+  const month = date.toLocaleString("en-US", { month: "short" }).toUpperCase();
+
+  const getOrdinal = (n) => {
+    if (n >= 11 && n <= 13) return `${n}TH`;
+    switch (n % 10) {
+      case 1: return `${n}ST`;
+      case 2: return `${n}ND`;
+      case 3: return `${n}RD`;
+      default: return `${n}TH`;
+    }
+  };
+
+  return `${getOrdinal(day)} ${month}`;
+}
+
 
 const updateItemTrackingAndStatus = async (req, res) => {
   const { item_trans_id, tracking_number, status, senderEmail, receiverEmail } =
@@ -4688,6 +4793,7 @@ module.exports = {
   getShipmentItems,
   getShipmentInfoByTransId,
   updateShipment,
+  deleteShipment,
   getBarcodeShipmentItems,
   updateItemStatusToOutOfOffice,
   updateItemStatusToDelivered,
